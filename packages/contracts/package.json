@@ -1,0 +1,13 @@
+{
+  "name": "@chainbounty/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "deploy": "forge script script/Deploy.s.sol:DeployScript --rpc-url ${RPC_URL} --broadcast",
+    "lint": "forge fmt --check",
+    "clean": "forge clean"
+  },
+  "devDependencies": {}
+}

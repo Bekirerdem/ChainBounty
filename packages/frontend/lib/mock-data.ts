@@ -38,7 +38,9 @@ export interface Submission {
 //                    MOCK BOUNTIES
 // ============================================================
 
-const now = Math.floor(Date.now() / 1000);
+// Sabit referans timestamp — hydration mismatch önlemek için Date.now() kullanmıyoruz
+// Bu değer 2026-02-18T00:00:00Z'ye karşılık gelir
+const now = 1771286400;
 const DAY = 86400;
 
 export const mockBounties: Bounty[] = [
@@ -231,8 +233,8 @@ export function formatAddress(address: string): string {
 }
 
 export function formatDeadline(deadline: number): string {
-    const now = Math.floor(Date.now() / 1000);
-    const diff = deadline - now;
+    const ref = 1771286400; // Sabit referans timestamp (hydration-safe)
+    const diff = deadline - ref;
 
     if (diff <= 0) return "Expired";
 
