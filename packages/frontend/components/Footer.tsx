@@ -10,24 +10,30 @@ export default function Footer() {
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexWrap: "wrap",
-                        gap: "1rem",
+                        gap: "1.5rem",
                     }}
                 >
-                    {/* Left: Branding */}
+                    {/* Branding */}
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontSize: "1.2rem" }}>🔺</span>
-                        <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-                            ChainBounty
-                        </span>
-                        <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>
-                            — Cross-Chain Bounty Platform
+                        <span style={{ fontSize: "1.1rem" }}>🔺</span>
+                        <span
+                            style={{
+                                fontFamily: "var(--font-heading)",
+                                fontWeight: 800,
+                                fontSize: "0.85rem",
+                                textTransform: "uppercase" as const,
+                                letterSpacing: "0.04em",
+                                color: "var(--text-secondary)",
+                            }}
+                        >
+                            Chain<span style={{ color: "var(--avax-red)" }}>Bounty</span>
                         </span>
                     </div>
 
-                    {/* Center: Links */}
-                    <div style={{ display: "flex", gap: "1.5rem" }}>
+                    {/* Links */}
+                    <div style={{ display: "flex", gap: "2rem" }}>
                         {[
-                            { label: "GitHub", href: "https://github.com" },
+                            { label: "GitHub", href: "https://github.com/Bekirerdem/ChainBounty" },
                             { label: "Docs", href: "#" },
                             { label: "Twitter", href: "#" },
                         ].map((link) => (
@@ -39,48 +45,54 @@ export default function Footer() {
                                 style={{
                                     color: "var(--text-muted)",
                                     textDecoration: "none",
-                                    fontSize: "0.8rem",
-                                    fontWeight: 500,
+                                    fontSize: "0.75rem",
+                                    fontFamily: "var(--font-heading)",
+                                    fontWeight: 600,
+                                    textTransform: "uppercase" as const,
+                                    letterSpacing: "0.08em",
                                     transition: "color 0.2s ease",
                                 }}
-                                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                                onMouseEnter={(e) =>
+                                    (e.currentTarget.style.color = "var(--text-primary)")
+                                }
+                                onMouseLeave={(e) =>
+                                    (e.currentTarget.style.color = "var(--text-muted)")
+                                }
                             >
                                 {link.label}
                             </a>
                         ))}
                     </div>
 
-                    {/* Right: Chain status */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span
-                                style={{
-                                    width: "6px",
-                                    height: "6px",
-                                    borderRadius: "50%",
-                                    background: "var(--status-open)",
-                                    boxShadow: "0 0 6px var(--status-open)",
-                                }}
-                            />
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                                C-Chain
-                            </span>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span
-                                style={{
-                                    width: "6px",
-                                    height: "6px",
-                                    borderRadius: "50%",
-                                    background: "var(--status-open)",
-                                    boxShadow: "0 0 6px var(--status-open)",
-                                }}
-                            />
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                                App-Chain
-                            </span>
-                        </div>
+                    {/* Chain Status */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                        {["C-Chain", "App-Chain"].map((chain) => (
+                            <div
+                                key={chain}
+                                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                            >
+                                <span
+                                    style={{
+                                        width: "5px",
+                                        height: "5px",
+                                        borderRadius: "50%",
+                                        background: "var(--status-open)",
+                                        boxShadow: "0 0 8px var(--status-open)",
+                                        display: "inline-block",
+                                    }}
+                                />
+                                <span
+                                    style={{
+                                        fontSize: "0.7rem",
+                                        color: "var(--text-muted)",
+                                        fontFamily: "var(--font-heading)",
+                                        letterSpacing: "0.04em",
+                                    }}
+                                >
+                                    {chain}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -89,13 +101,14 @@ export default function Footer() {
                     style={{
                         marginTop: "1.5rem",
                         paddingTop: "1rem",
-                        borderTop: "1px solid var(--border-glass)",
+                        borderTop: "1px solid var(--border-primary)",
                         textAlign: "center",
-                        fontSize: "0.75rem",
+                        fontSize: "0.7rem",
                         color: "var(--text-muted)",
+                        letterSpacing: "0.06em",
                     }}
                 >
-                    Built for Avalanche Build Games 2026 🏗️ Powered by ICM
+                    Built for Avalanche Build Games 2026 — Powered by ICM Teleporter
                 </div>
             </div>
         </footer>

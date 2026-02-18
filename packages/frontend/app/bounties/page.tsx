@@ -71,31 +71,23 @@ export default function BountiesPage() {
     }, [filter, sort, search]);
 
     return (
-        <main className="container" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
+        <main className="container pt-32 pb-20 min-h-screen">
             {/* Page Header */}
-            <motion.div initial="hidden" animate="visible">
+            <motion.div initial="hidden" animate="visible" className="mb-12">
                 <motion.h1
                     custom={0}
                     variants={fadeUp}
-                    style={{
-                        fontSize: "2.5rem",
-                        fontWeight: 800,
-                        marginBottom: "0.5rem",
-                    }}
+                    className="text-4xl md:text-5xl font-bold mb-4 font-outfit tracking-tight"
                 >
-                    Explore{" "}
-                    <span style={{ color: "var(--avax-red)" }}>Bounties</span>
+                    Explore <span className="text-avax-red">Bounties</span>
                 </motion.h1>
                 <motion.p
                     custom={1}
                     variants={fadeUp}
-                    style={{
-                        color: "var(--text-secondary)",
-                        fontSize: "1.1rem",
-                        marginBottom: "2rem",
-                    }}
+                    className="text-lg text-text-secondary max-w-2xl font-light"
                 >
-                    Find tasks that match your skills and earn AVAX
+                    Discover tasks, contribute to the ecosystem, and earn AVAX.
+                    Filter by status or search for specific opportunities.
                 </motion.p>
             </motion.div>
 
@@ -104,100 +96,78 @@ export default function BountiesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="glass-card"
-                style={{
-                    padding: "1.25rem",
-                    marginBottom: "2rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                }}
+                className="glass-card mb-10 p-5 md:p-6"
             >
-                {/* Search */}
-                <div style={{ position: "relative" }}>
-                    <span
-                        style={{
-                            position: "absolute",
-                            left: "14px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            fontSize: "1rem",
-                            color: "var(--text-muted)",
-                        }}
-                    >
-                        🔍
-                    </span>
-                    <input
-                        type="text"
-                        placeholder="Search bounties by title, description, or tags..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="form-input"
-                        style={{ paddingLeft: "42px", width: "100%" }}
-                    />
-                </div>
-
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        gap: "1rem",
-                    }}
-                >
-                    {/* Status Filters */}
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                        {statusFilters.map((s) => (
-                            <button
-                                key={s}
-                                onClick={() => setFilter(s)}
-                                style={{
-                                    padding: "6px 16px",
-                                    borderRadius: "8px",
-                                    border: filter === s ? "1px solid var(--avax-red)" : "1px solid var(--border-glass)",
-                                    background: filter === s ? "rgba(232, 65, 66, 0.15)" : "transparent",
-                                    color: filter === s ? "var(--avax-red)" : "var(--text-secondary)",
-                                    fontSize: "0.8rem",
-                                    fontWeight: 600,
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                }}
-                            >
-                                {s === "InProgress" ? "In Progress" : s}
-                            </button>
-                        ))}
+                <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between">
+                    {/* Search */}
+                    <div className="relative flex-1 max-w-lg">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 21L15.0001 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search bounties..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="form-input w-full pl-12 bg-bg-secondary/50 border-border-glass focus:border-avax-red/50 transition-colors"
+                        />
                     </div>
 
-                    {/* Sort */}
-                    <select
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value as SortOption)}
-                        className="form-input"
-                        style={{
-                            width: "auto",
-                            padding: "6px 12px",
-                            fontSize: "0.8rem",
-                            cursor: "pointer",
-                        }}
-                    >
-                        {sortOptions.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                        {/* Status Filters - Desktop (horizontal) / Mobile (scrollable) */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar mask-gradient-x">
+                            {statusFilters.map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setFilter(s)}
+                                    className={`
+                                        px-4 py-2 rounded-none text-sm font-semibold transition-all duration-200 border whitespace-nowrap
+                                        ${
+                                            filter === s
+                                                ? "bg-avax-red/10 border-avax-red text-avax-red"
+                                                : "bg-transparent border-transparent text-text-muted hover:text-text-primary hover:bg-white/5"
+                                        }
+                                    `}
+                                >
+                                    {s === "InProgress" ? "In Progress" : s}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Sort */}
+                        <div className="relative min-w-[160px]">
+                            <select
+                                value={sort}
+                                onChange={(e) => setSort(e.target.value as SortOption)}
+                                className="form-input w-full appearance-none cursor-pointer bg-bg-secondary/50 border-border-glass hover:border-avax-red/30 px-4 py-2 pr-10"
+                            >
+                                {sortOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 9l6 6 6-6" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </motion.div>
 
             {/* Results Count */}
-            <div style={{ marginBottom: "1rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                Showing {filteredBounties.length} of {mockBounties.length} bounties
+            <div className="flex items-center gap-2 mb-6 text-sm text-text-muted font-mono uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-avax-red inline-block"></span>
+                Showing {filteredBounties.length} result{filteredBounties.length !== 1 ? "s" : ""}
             </div>
 
             {/* Bounty Grid */}
             {filteredBounties.length > 0 ? (
-                <motion.div initial="hidden" animate="visible" className="bounty-grid">
+                <motion.div initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredBounties.map((bounty, i) => (
                         <motion.div key={bounty.bountyId} custom={i} variants={fadeUp}>
                             <BountyCard bounty={bounty} />
@@ -205,20 +175,10 @@ export default function BountiesPage() {
                     ))}
                 </motion.div>
             ) : (
-                <div
-                    className="glass-card"
-                    style={{
-                        padding: "4rem 2rem",
-                        textAlign: "center",
-                    }}
-                >
-                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🔍</div>
-                    <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-                        No bounties found
-                    </h3>
-                    <p style={{ color: "var(--text-secondary)" }}>
-                        Try adjusting your filters or search terms
-                    </p>
+                <div className="glass-card py-24 text-center border border-dashed border-white/10">
+                    <div className="text-6xl mb-4 opacity-50">🔍</div>
+                    <h3 className="text-2xl font-bold mb-2 font-outfit">No bounties found</h3>
+                    <p className="text-text-secondary">Try adjusting your filters or search terms to find what you&apos;re looking for.</p>
                 </div>
             )}
         </main>

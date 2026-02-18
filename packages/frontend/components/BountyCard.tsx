@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Bounty } from "@/lib/mock-data";
-import { formatDeadline, formatAddress } from "@/lib/mock-data";
+import { formatDeadline } from "@/lib/mock-data";
 import StatusBadge from "./StatusBadge";
 
 interface BountyCardProps {
@@ -12,7 +12,7 @@ interface BountyCardProps {
 export default function BountyCard({ bounty }: BountyCardProps) {
     return (
         <Link href={`/bounties/${bounty.bountyId}`} style={{ textDecoration: "none", color: "inherit" }}>
-            <div className="glass-card bounty-card" style={{ padding: "1.5rem", cursor: "pointer" }}>
+            <div className="card card-interactive" style={{ padding: "1.5rem" }}>
                 {/* Header: Status + Tags */}
                 <div
                     style={{
@@ -28,13 +28,16 @@ export default function BountyCard({ bounty }: BountyCardProps) {
                             <span
                                 key={tag}
                                 style={{
-                                    padding: "2px 8px",
-                                    borderRadius: "6px",
-                                    fontSize: "0.7rem",
-                                    fontWeight: 500,
+                                    padding: "3px 10px",
+                                    borderRadius: "0",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 600,
+                                    fontFamily: "var(--font-heading)",
+                                    textTransform: "uppercase" as const,
+                                    letterSpacing: "0.06em",
                                     color: "var(--text-secondary)",
-                                    background: "rgba(255,255,255,0.05)",
-                                    border: "1px solid rgba(255,255,255,0.06)",
+                                    background: "rgba(255,255,255,0.04)",
+                                    border: "1px solid var(--border-primary)",
                                 }}
                             >
                                 {tag}
@@ -46,8 +49,10 @@ export default function BountyCard({ bounty }: BountyCardProps) {
                 {/* Title */}
                 <h3
                     style={{
-                        fontSize: "1.1rem",
+                        fontFamily: "var(--font-heading)",
+                        fontSize: "1.05rem",
                         fontWeight: 700,
+                        letterSpacing: "-0.01em",
                         marginBottom: "0.5rem",
                         lineHeight: 1.3,
                         display: "-webkit-box",
@@ -59,10 +64,10 @@ export default function BountyCard({ bounty }: BountyCardProps) {
                     {bounty.title}
                 </h3>
 
-                {/* Description (truncated) */}
+                {/* Description */}
                 <p
                     style={{
-                        fontSize: "0.875rem",
+                        fontSize: "0.85rem",
                         color: "var(--text-secondary)",
                         lineHeight: 1.6,
                         marginBottom: "1.25rem",
@@ -75,26 +80,25 @@ export default function BountyCard({ bounty }: BountyCardProps) {
                     {bounty.description}
                 </p>
 
-                {/* Footer: Reward + Deadline + Submissions */}
+                {/* Footer: Reward + Meta */}
                 <div
                     style={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         paddingTop: "1rem",
-                        borderTop: "1px solid var(--border-glass)",
+                        borderTop: "1px solid var(--border-primary)",
                     }}
                 >
                     {/* Reward */}
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "1.25rem" }}>🔺</span>
+                        <span style={{ fontSize: "1.1rem" }}>🔺</span>
                         <span
                             style={{
-                                fontSize: "1.1rem",
-                                fontWeight: 700,
-                                background: "linear-gradient(135deg, #E84142, #ff6b6b)",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
+                                fontFamily: "var(--font-heading)",
+                                fontSize: "1.05rem",
+                                fontWeight: 800,
+                                color: "var(--avax-red)",
                             }}
                         >
                             {bounty.reward} AVAX
@@ -105,22 +109,26 @@ export default function BountyCard({ bounty }: BountyCardProps) {
                     <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                         <span
                             style={{
-                                fontSize: "0.75rem",
+                                fontSize: "0.7rem",
                                 color: "var(--text-muted)",
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "4px",
+                                fontFamily: "var(--font-heading)",
+                                letterSpacing: "0.04em",
                             }}
                         >
                             ⏰ {formatDeadline(bounty.deadline)}
                         </span>
                         <span
                             style={{
-                                fontSize: "0.75rem",
+                                fontSize: "0.7rem",
                                 color: "var(--text-muted)",
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "4px",
+                                fontFamily: "var(--font-heading)",
+                                letterSpacing: "0.04em",
                             }}
                         >
                             📝 {bounty.submissionCount}

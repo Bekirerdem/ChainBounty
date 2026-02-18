@@ -10,43 +10,74 @@ const MOCK_WALLET = "0x1a2B3c4D5e6F7890AbCdEf1234567890aBcDeF12";
 const navLinks = [
     { href: "/", label: "Home" },
     { href: "/bounties", label: "Bounties" },
-    { href: "/create", label: "Create Bounty" },
+    { href: "/create", label: "Create" },
 ];
 
 export default function Navbar() {
     const pathname = usePathname();
     const [connected, setConnected] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
         <nav className="navbar">
-            <div className="container" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "64px" }}>
+            <div
+                className="container"
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    height: "64px",
+                }}
+            >
                 {/* Logo */}
-                <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontSize: "1.5rem" }}>🔺</span>
+                <Link
+                    href="/"
+                    style={{
+                        textDecoration: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                    }}
+                >
+                    <span style={{ fontSize: "1.4rem" }}>🔺</span>
                     <span
                         style={{
-                            fontSize: "1.2rem",
+                            fontFamily: "var(--font-heading)",
+                            fontSize: "1.1rem",
                             fontWeight: 800,
-                            background: "linear-gradient(135deg, #f0f0f5 0%, #E84142 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
+                            letterSpacing: "-0.02em",
+                            textTransform: "uppercase" as const,
+                            color: "var(--text-primary)",
                         }}
                     >
-                        ChainBounty
+                        Chain<span style={{ color: "var(--avax-red)" }}>Bounty</span>
                     </span>
                 </Link>
 
-                {/* Nav Links */}
-                <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+                {/* Desktop Nav Links */}
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "2rem",
+                    }}
+                    className="nav-desktop"
+                >
                     {navLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
                             style={{
                                 textDecoration: "none",
-                                fontSize: "0.9rem",
+                                fontFamily: "var(--font-heading)",
+                                fontSize: "0.8rem",
                                 fontWeight: 600,
-                                color: pathname === link.href ? "var(--avax-red)" : "var(--text-secondary)",
+                                textTransform: "uppercase" as const,
+                                letterSpacing: "0.08em",
+                                color:
+                                    pathname === link.href
+                                        ? "var(--text-primary)"
+                                        : "var(--text-muted)",
                                 transition: "color 0.2s ease",
                                 position: "relative",
                             }}
@@ -61,7 +92,6 @@ export default function Navbar() {
                                         right: 0,
                                         height: "2px",
                                         background: "var(--avax-red)",
-                                        borderRadius: "1px",
                                     }}
                                 />
                             )}
@@ -69,44 +99,100 @@ export default function Navbar() {
                     ))}
                 </div>
 
-                {/* Wallet Connect */}
-                <button
-                    onClick={() => setConnected(!connected)}
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    {/* Wallet Connect */}
+                    <button
+                        onClick={() => setConnected(!connected)}
+                        className={connected ? "btn-ghost btn-sm" : "btn-avax btn-sm"}
+                        style={
+                            connected
+                                ? { borderColor: "var(--border-avax)", color: "var(--avax-red)" }
+                                : {}
+                        }
+                    >
+                        {connected ? (
+                            <>
+                                <span
+                                    style={{
+                                        width: "6px",
+                                        height: "6px",
+                                        borderRadius: "50%",
+                                        background: "var(--status-open)",
+                                        boxShadow: "0 0 8px var(--status-open)",
+                                        display: "inline-block",
+                                    }}
+                                />
+                                {formatAddress(MOCK_WALLET)}
+                            </>
+                        ) : (
+                            "Connect"
+                        )}
+                    </button>
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                        className="mobile-toggle"
+                        style={{
+                            display: "none",
+                            background: "transparent",
+                            border: "none",
+                            color: "var(--text-primary)",
+                            fontSize: "1.5rem",
+                            cursor: "pointer",
+                            padding: "4px",
+                        }}
+                    >
+                        {mobileOpen ? "✕" : "☰"}
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Menu */}
+            {mobileOpen && (
+                <div
                     style={{
-                        padding: "8px 20px",
-                        borderRadius: "12px",
-                        border: connected ? "1px solid rgba(232, 65, 66, 0.3)" : "1px solid rgba(255,255,255,0.1)",
-                        background: connected
-                            ? "rgba(232, 65, 66, 0.1)"
-                            : "linear-gradient(135deg, var(--avax-red), #c0392b)",
-                        color: connected ? "var(--avax-red)" : "white",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
+                        padding: "1rem var(--space-page)",
+                        borderTop: "1px solid var(--border-primary)",
                         display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
+                        flexDirection: "column",
+                        gap: "1rem",
                     }}
                 >
-                    {connected ? (
-                        <>
-                            <span
-                                style={{
-                                    width: "8px",
-                                    height: "8px",
-                                    borderRadius: "50%",
-                                    background: "var(--status-open)",
-                                    boxShadow: "0 0 6px var(--status-open)",
-                                }}
-                            />
-                            {formatAddress(MOCK_WALLET)}
-                        </>
-                    ) : (
-                        "🔗 Connect Wallet"
-                    )}
-                </button>
-            </div>
+                    {navLinks.map((link) => (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => setMobileOpen(false)}
+                            style={{
+                                textDecoration: "none",
+                                fontFamily: "var(--font-heading)",
+                                fontSize: "0.85rem",
+                                fontWeight: 600,
+                                textTransform: "uppercase" as const,
+                                letterSpacing: "0.06em",
+                                color:
+                                    pathname === link.href
+                                        ? "var(--text-primary)"
+                                        : "var(--text-muted)",
+                            }}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
+                </div>
+            )}
+
+            <style jsx>{`
+                @media (max-width: 768px) {
+                    .nav-desktop {
+                        display: none !important;
+                    }
+                    .mobile-toggle {
+                        display: block !important;
+                    }
+                }
+            `}</style>
         </nav>
     );
 }

@@ -29,6 +29,9 @@ export interface Submission {
     submissionId: number;
     bountyId: number;
     submitter: string;
+    description: string;
+    repoLink: string;
+    demoLink?: string;
     solutionURI: string;
     submittedAt: number;
     approved: boolean;
@@ -146,6 +149,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 0,
         bountyId: 0,
         submitter: "0xFrEeLaNcEr1111111111111111111111111111111",
+        description: "Implemented all required features including wallet connection and token transfer.",
+        repoLink: "https://github.com/freelancer1/bridge-ui",
         solutionURI: "https://github.com/freelancer1/bridge-ui",
         submittedAt: now - 2 * DAY,
         approved: false,
@@ -154,6 +159,9 @@ export const mockSubmissions: Submission[] = [
         submissionId: 1,
         bountyId: 0,
         submitter: "0xFrEeLaNcEr2222222222222222222222222222222",
+        description: "Optimized for gas usage and added dark mode support.",
+        repoLink: "https://github.com/freelancer2/cross-chain-bridge",
+        demoLink: "https://bridge-demo.vercel.app",
         solutionURI: "https://github.com/freelancer2/cross-chain-bridge",
         submittedAt: now - 1 * DAY,
         approved: false,
@@ -162,6 +170,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 2,
         bountyId: 2,
         submitter: "0xFrEeLaNcEr1111111111111111111111111111111",
+        description: "Integrated Chainlink and added fallback mechanism.",
+        repoLink: "https://github.com/freelancer1/oracle-integration",
         solutionURI: "https://github.com/freelancer1/oracle-integration",
         submittedAt: now - 7 * DAY,
         approved: false,
@@ -170,6 +180,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 3,
         bountyId: 2,
         submitter: "0xFrEeLaNcEr3333333333333333333333333333333",
+        description: "Used RedStone oracles as a fallback for Chainlink.",
+        repoLink: "https://github.com/freelancer3/avax-oracle",
         solutionURI: "https://github.com/freelancer3/avax-oracle",
         submittedAt: now - 6 * DAY,
         approved: false,
@@ -178,6 +190,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 4,
         bountyId: 2,
         submitter: "0xFrEeLaNcEr2222222222222222222222222222222",
+        description: "Optimized gas costs for oracle updates using assembly.",
+        repoLink: "https://github.com/freelancer2/price-feed",
         solutionURI: "https://github.com/freelancer2/price-feed",
         submittedAt: now - 5 * DAY,
         approved: false,
@@ -186,6 +200,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 5,
         bountyId: 3,
         submitter: "0xFrEeLaNcEr3333333333333333333333333333333",
+        description: "Deployed subgraph on The Graph hosted service, indexing all required events.",
+        repoLink: "https://github.com/freelancer3/bounty-subgraph",
         solutionURI: "https://github.com/freelancer3/bounty-subgraph",
         submittedAt: now - 12 * DAY,
         approved: true,
@@ -194,6 +210,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 6,
         bountyId: 4,
         submitter: "0xFrEeLaNcEr1111111111111111111111111111111",
+        description: "3D animated landing page using Three.js and React Fiber.",
+        repoLink: "https://github.com/freelancer1/web3-landing",
         solutionURI: "https://github.com/freelancer1/web3-landing",
         submittedAt: now - 8 * DAY,
         approved: false,
@@ -202,6 +220,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 7,
         bountyId: 4,
         submitter: "0xFrEeLaNcEr2222222222222222222222222222222",
+        description: "Clean, minimal landing page with focus on typography and conversion.",
+        repoLink: "https://github.com/freelancer2/startup-page",
         solutionURI: "https://github.com/freelancer2/startup-page",
         submittedAt: now - 7 * DAY,
         approved: false,
@@ -210,6 +230,8 @@ export const mockSubmissions: Submission[] = [
         submissionId: 8,
         bountyId: 6,
         submitter: "0xFrEeLaNcEr3333333333333333333333333333333",
+        description: "Real-time dashboard using WebSocket for ICM events.",
+        repoLink: "https://github.com/freelancer3/icm-dashboard",
         solutionURI: "https://github.com/freelancer3/icm-dashboard",
         submittedAt: now - 1 * DAY,
         approved: false,

@@ -71,21 +71,21 @@ export default function CreateBountyPage() {
 
     if (success) {
         return (
-            <main className="container" style={{ paddingTop: "6rem", paddingBottom: "4rem" }}>
+            <main className="container pt-32 pb-20 min-h-screen flex items-center justify-center">
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="glass-card"
-                    style={{ maxWidth: "500px", margin: "0 auto", padding: "3rem", textAlign: "center" }}
+                    className="glass-card max-w-lg w-full p-12 text-center border-avax-red/20 relative overflow-hidden"
                 >
-                    <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🎉</div>
-                    <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+                    <div className="absolute inset-0 bg-linear-to-br from-avax-red/5 to-transparent pointer-events-none" />
+                    <div className="text-6xl mb-6">🎉</div>
+                    <h2 className="text-3xl font-bold mb-3 font-outfit text-white">
                         Bounty Created!
                     </h2>
-                    <p style={{ color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
+                    <p className="text-text-secondary mb-2 text-lg">
                         Your bounty has been posted on C-Chain (mock)
                     </p>
-                    <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                    <p className="text-text-muted text-sm font-mono mt-6 animate-pulse">
                         Redirecting to bounties page...
                     </p>
                 </motion.div>
@@ -94,25 +94,26 @@ export default function CreateBountyPage() {
     }
 
     return (
-        <main className="container" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
-            <motion.div initial="hidden" animate="visible" style={{ maxWidth: "700px", margin: "0 auto" }}>
+        <main className="container pt-32 pb-20 min-h-screen">
+            <motion.div initial="hidden" animate="visible" className="max-w-3xl mx-auto">
                 {/* Header */}
-                <motion.div custom={0} variants={fadeUp} style={{ marginBottom: "2rem" }}>
-                    <h1 style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: "0.5rem" }}>
-                        Create{" "}
-                        <span style={{ color: "var(--avax-red)" }}>Bounty</span>
+                <motion.div custom={0} variants={fadeUp} className="mb-10 text-center md:text-left">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-3 font-outfit tracking-tight">
+                        Create <span className="text-avax-red">Bounty</span>
                     </h1>
-                    <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem" }}>
-                        Post a task, lock AVAX in escrow, and find talented freelancers
+                    <p className="text-xl text-text-secondary font-light">
+                        Post a task, lock AVAX in escrow, and recruit talent.
                     </p>
                 </motion.div>
 
                 {/* Form */}
                 <motion.form custom={1} variants={fadeUp} onSubmit={handleSubmit}>
-                    <div className="glass-card form-card" style={{ padding: "2rem" }}>
+                    <div className="glass-card p-8 md:p-10 border-t border-white/10 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-avax-red via-transparent to-transparent opacity-50" />
+                        
                         {/* Title */}
-                        <div style={{ marginBottom: "1.5rem" }}>
-                            <label className="form-label">
+                        <div className="mb-8">
+                            <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
                                 Bounty Title
                             </label>
                             <input
@@ -120,39 +121,36 @@ export default function CreateBountyPage() {
                                 placeholder="e.g. Build a Cross-Chain Token Bridge UI"
                                 value={form.title}
                                 onChange={(e) => updateField("title", e.target.value)}
-                                className="form-input"
-                                style={{ width: "100%" }}
+                                className="form-input w-full bg-bg-secondary/40 focus:bg-bg-secondary/80 text-lg py-3"
                             />
-                            {errors.title && <span className="form-error">{errors.title}</span>}
-                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                                {form.title.length}/100 characters
+                            {errors.title && <span className="text-avax-red text-xs mt-2 block font-medium">{errors.title}</span>}
+                            <div className="text-xs text-text-muted mt-2 text-right">
+                                {form.title.length}/100
                             </div>
                         </div>
 
                         {/* Description */}
-                        <div style={{ marginBottom: "1.5rem" }}>
-                            <label className="form-label">
+                        <div className="mb-8">
+                            <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
                                 Description
                             </label>
                             <textarea
                                 placeholder="Describe the task in detail. Include requirements, deliverables, and any relevant context..."
                                 value={form.description}
                                 onChange={(e) => updateField("description", e.target.value)}
-                                className="form-input"
-                                rows={6}
-                                style={{ width: "100%", resize: "vertical", minHeight: "150px" }}
+                                className="form-input w-full bg-bg-secondary/40 focus:bg-bg-secondary/80 min-h-[200px] resize-y"
                             />
-                            {errors.description && <span className="form-error">{errors.description}</span>}
+                            {errors.description && <span className="text-avax-red text-xs mt-2 block font-medium">{errors.description}</span>}
                         </div>
 
                         {/* Reward + Deadline Row */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "1.5rem" }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             {/* Reward */}
                             <div>
-                                <label className="form-label">
+                                <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
                                     Reward (AVAX)
                                 </label>
-                                <div style={{ position: "relative" }}>
+                                <div className="relative">
                                     <input
                                         type="number"
                                         placeholder="0.0"
@@ -160,48 +158,36 @@ export default function CreateBountyPage() {
                                         min="0"
                                         value={form.reward}
                                         onChange={(e) => updateField("reward", e.target.value)}
-                                        className="form-input"
-                                        style={{ width: "100%", paddingRight: "60px" }}
+                                        className="form-input w-full pr-20 text-lg font-mono"
                                     />
-                                    <span
-                                        style={{
-                                            position: "absolute",
-                                            right: "14px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            color: "var(--avax-red)",
-                                            fontWeight: 600,
-                                            fontSize: "0.85rem",
-                                        }}
-                                    >
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-avax-red font-bold text-sm">
                                         🔺 AVAX
                                     </span>
                                 </div>
-                                {errors.reward && <span className="form-error">{errors.reward}</span>}
-                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                                    This amount will be locked in escrow
+                                {errors.reward && <span className="text-avax-red text-xs mt-2 block font-medium">{errors.reward}</span>}
+                                <div className="text-xs text-text-muted mt-2">
+                                    Funds will be locked in escrow.
                                 </div>
                             </div>
 
                             {/* Deadline */}
                             <div>
-                                <label className="form-label">
+                                <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
                                     Deadline
                                 </label>
                                 <input
                                     type="datetime-local"
                                     value={form.deadline}
                                     onChange={(e) => updateField("deadline", e.target.value)}
-                                    className="form-input"
-                                    style={{ width: "100%" }}
+                                    className="form-input w-full text-lg"
                                 />
-                                {errors.deadline && <span className="form-error">{errors.deadline}</span>}
+                                {errors.deadline && <span className="text-avax-red text-xs mt-2 block font-medium">{errors.deadline}</span>}
                             </div>
                         </div>
 
                         {/* Tags */}
-                        <div style={{ marginBottom: "2rem" }}>
-                            <label className="form-label">
+                        <div className="mb-10">
+                            <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
                                 Tags (optional)
                             </label>
                             <input
@@ -209,58 +195,44 @@ export default function CreateBountyPage() {
                                 placeholder="e.g. Solidity, Frontend, Design (comma-separated)"
                                 value={form.tags}
                                 onChange={(e) => updateField("tags", e.target.value)}
-                                className="form-input"
-                                style={{ width: "100%" }}
+                                className="form-input w-full"
                             />
                         </div>
 
                         {/* Info Card */}
-                        <div
-                            style={{
-                                padding: "1rem 1.25rem",
-                                borderRadius: "12px",
-                                background: "rgba(232, 65, 66, 0.05)",
-                                border: "1px solid rgba(232, 65, 66, 0.15)",
-                                marginBottom: "2rem",
-                                fontSize: "0.85rem",
-                                color: "var(--text-secondary)",
-                                lineHeight: 1.7,
-                            }}
-                        >
-                            <strong style={{ color: "var(--avax-red)" }}>⚡ How it works:</strong> Your reward
-                            amount will be locked in a smart contract on C-Chain. When you approve a submission,
-                            the payment is automatically released to the freelancer via ICM cross-chain messaging.
+                        <div className="bg-avax-red/5 border border-avax-red/10 rounded-none p-5 mb-8 text-sm text-text-secondary leading-relaxed flex items-start gap-3">
+                            <span className="text-lg">⚡</span>
+                            <div>
+                                <strong className="text-avax-red font-semibold block mb-1">How it works</strong>
+                                Your reward amount will be locked in a smart contract on C-Chain. When you approve a submission, the payment is automatically released to the freelancer via ICM cross-chain messaging.
+                            </div>
                         </div>
 
                         {/* Submit */}
-                        <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+                        <div className="flex gap-4 justify-end items-center border-t border-white/5 pt-8">
                             <button
                                 type="button"
                                 onClick={() => router.push("/bounties")}
-                                style={{
-                                    padding: "12px 24px",
-                                    borderRadius: "12px",
-                                    border: "1px solid var(--border-glass)",
-                                    background: "transparent",
-                                    color: "var(--text-secondary)",
-                                    cursor: "pointer",
-                                    fontWeight: 600,
-                                    fontSize: "0.95rem",
-                                }}
+                                className="px-6 py-3 text-sm font-semibold text-text-muted hover:text-white transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                className="btn-primary"
+                                className="btn-avax px-10 py-3 text-base flex items-center gap-2"
                                 disabled={submitting}
-                                style={{
-                                    padding: "12px 32px",
-                                    fontSize: "0.95rem",
-                                    opacity: submitting ? 0.7 : 1,
-                                }}
                             >
-                                {submitting ? "⏳ Creating..." : "🚀 Create Bounty"}
+                                {submitting ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Creating...
+                                    </>
+                                ) : (
+                                    <>🚀 Create Bounty</>
+                                )}
                             </button>
                         </div>
                     </div>

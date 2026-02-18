@@ -10,244 +10,215 @@ const fadeUp = {
     visible: (i: number) => ({
         opacity: 1,
         y: 0,
-        transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" },
+        transition: { delay: i * 0.12, duration: 0.7, ease: [0.22, 1, 0.36, 1] },
     }),
 };
 
 const stats = [
-    { label: "Total Bounties", value: mockStats.totalBounties.toString(), icon: "📋" },
-    { label: "AVAX Locked", value: `${mockStats.totalAvaxLocked}`, icon: "🔺" },
-    { label: "Active Freelancers", value: mockStats.activeFreelancers.toString(), icon: "👥" },
-    { label: "Completed", value: mockStats.completedBounties.toString(), icon: "✅" },
+    { label: "Total Bounties", value: mockStats.totalBounties.toString() },
+    { label: "AVAX Locked", value: `${mockStats.totalAvaxLocked}` },
+    { label: "Freelancers", value: mockStats.activeFreelancers.toString() },
+    { label: "Completed", value: mockStats.completedBounties.toString() },
+];
+
+const marqueeItems = [
+    "Cross-Chain Bounties",
+    "◆",
+    "Avalanche C-Chain",
+    "◆",
+    "ICM Teleporter",
+    "◆",
+    "App-Chain Execution",
+    "◆",
+    "Trustless Escrow",
+    "◆",
+    "Zero Gas Submissions",
+    "◆",
+];
+
+const steps = [
+    {
+        num: "01",
+        title: "Create a Bounty",
+        desc: "Post your task on C-Chain with AVAX reward locked in escrow. Define scope, deadline, and requirements.",
+    },
+    {
+        num: "02",
+        title: "Submit Solutions",
+        desc: "Freelancers submit work on App-Chain with near-zero gas fees. Multiple submissions, fair competition.",
+    },
+    {
+        num: "03",
+        title: "Approve & Pay",
+        desc: "Accept the best solution. ICM Teleporter triggers trustless cross-chain payment from escrow.",
+    },
 ];
 
 export default function HomePage() {
-    const featuredBounties = mockBounties.filter((b) => b.status === "Open").slice(0, 3);
+    const featuredBounties = mockBounties.slice(0, 3);
 
     return (
         <main>
-            {/* Hero Section */}
-            <section className="hero-section">
-                <div className="hero-glow" />
-                <div className="container" style={{ position: "relative", zIndex: 1 }}>
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
+            {/* ============ HERO SECTION ============ */}
+            <section className="hero-cinematic">
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    style={{ position: "relative", zIndex: 1, maxWidth: "900px" }}
+                >
+                    {/* Label */}
+                    <motion.p
+                        custom={0}
+                        variants={fadeUp}
+                        className="text-label"
+                        style={{ marginBottom: "1.5rem" }}
+                    >
+                        Built on Avalanche — Cross-Chain Protocol
+                    </motion.p>
+
+                    {/* Hero Title */}
+                    <motion.h1
+                        custom={1}
+                        variants={fadeUp}
+                        className="text-display-xl"
+                        style={{ marginBottom: "1.5rem" }}
+                    >
+                        Ship Work.{" "}
+                        <span className="gradient-text">Get Paid.</span>
+                        <br />
+                        Cross-Chain.
+                    </motion.h1>
+
+                    {/* Subtitle */}
+                    <motion.p
+                        custom={2}
+                        variants={fadeUp}
                         style={{
-                            textAlign: "center",
-                            paddingTop: "6rem",
-                            paddingBottom: "4rem",
+                            fontSize: "1.1rem",
+                            color: "var(--text-secondary)",
+                            maxWidth: "600px",
+                            margin: "0 auto 2.5rem",
+                            lineHeight: 1.6,
                         }}
                     >
-                        <motion.div
-                            custom={0}
-                            variants={fadeUp}
-                            style={{
-                                fontSize: "0.875rem",
-                                fontWeight: 600,
-                                color: "var(--avax-red)",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.15em",
-                                marginBottom: "1.5rem",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: "8px",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    width: "8px",
-                                    height: "8px",
-                                    borderRadius: "50%",
-                                    background: "var(--avax-red)",
-                                    boxShadow: "0 0 12px var(--avax-red-glow)",
-                                    animation: "pulse 2s ease-in-out infinite",
-                                }}
-                            />
-                            Built on Avalanche ICM
-                        </motion.div>
+                        Create bounties on C-Chain. Submit solutions on App-Chain with
+                        near-zero gas. Settle payments trustlessly via ICM Teleporter.
+                    </motion.p>
 
-                        <motion.h1
-                            custom={1}
-                            variants={fadeUp}
-                            style={{
-                                fontSize: "clamp(2.5rem, 6vw, 5rem)",
-                                fontWeight: 800,
-                                lineHeight: 1.05,
-                                marginBottom: "1.5rem",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    background: "linear-gradient(135deg, #f0f0f5 0%, #9495a5 100%)",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                }}
+                    {/* CTA */}
+                    <motion.div
+                        custom={3}
+                        variants={fadeUp}
+                        style={{ display: "flex", gap: "1rem", justifyContent: "center" }}
+                    >
+                        <Link href="/bounties" style={{ textDecoration: "none" }}>
+                            <button className="btn-avax">Explore Bounties →</button>
+                        </Link>
+                        <Link href="/create" style={{ textDecoration: "none" }}>
+                            <button className="btn-ghost">Post a Bounty</button>
+                        </Link>
+                    </motion.div>
+                </motion.div>
+            </section>
+
+            {/* ============ MARQUEE STRIP ============ */}
+            <div className="marquee-strip">
+                <div className="marquee-content">
+                    {[...marqueeItems, ...marqueeItems].map((item, i) => (
+                        <span key={i} className={item === "◆" ? "avax-accent" : ""}>
+                            {item}
+                        </span>
+                    ))}
+                </div>
+            </div>
+
+            {/* ============ STATS ============ */}
+            <section style={{ padding: "5rem 0" }}>
+                <div className="container">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-50px" }}
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(4, 1fr)",
+                            gap: "1px",
+                            background: "var(--border-primary)",
+                        }}
+                    >
+                        {stats.map((stat, i) => (
+                            <motion.div
+                                key={stat.label}
+                                custom={i}
+                                variants={fadeUp}
+                                className="stat-card"
                             >
-                                Cross-Chain
-                            </span>
-                            <br />
-                            <span
-                                style={{
-                                    background: "linear-gradient(135deg, #E84142 0%, #ff6b6b 50%, #E84142 100%)",
-                                    backgroundSize: "200% 200%",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                    animation: "gradientShift 4s ease infinite",
-                                }}
-                            >
-                                Bounty Platform
-                            </span>
-                        </motion.h1>
-
-                        <motion.p
-                            custom={2}
-                            variants={fadeUp}
-                            style={{
-                                fontSize: "1.2rem",
-                                color: "var(--text-secondary)",
-                                maxWidth: "600px",
-                                margin: "0 auto 2.5rem",
-                                lineHeight: 1.7,
-                            }}
-                        >
-                            Create bounties on C-Chain, execute on App-Chain, settle payments
-                            automatically via Avalanche ICM — trustless & gas-efficient.
-                        </motion.p>
-
-                        <motion.div
-                            custom={3}
-                            variants={fadeUp}
-                            style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}
-                        >
-                            <Link href="/bounties">
-                                <button className="btn-primary" style={{ fontSize: "1.1rem", padding: "16px 36px" }}>
-                                    🚀 Explore Bounties
-                                </button>
-                            </Link>
-                            <Link href="/create">
-                                <button
-                                    style={{
-                                        fontSize: "1.1rem",
-                                        padding: "16px 36px",
-                                        borderRadius: "12px",
-                                        border: "1px solid rgba(255,255,255,0.1)",
-                                        background: "rgba(255,255,255,0.03)",
-                                        color: "var(--text-secondary)",
-                                        fontWeight: 600,
-                                        cursor: "pointer",
-                                        transition: "all 0.3s ease",
-                                    }}
-                                >
-                                    ✨ Post a Bounty
-                                </button>
-                            </Link>
-                        </motion.div>
+                                <p className="stat-value">{stat.value}</p>
+                                <p className="stat-label">{stat.label}</p>
+                            </motion.div>
+                        ))}
                     </motion.div>
                 </div>
             </section>
 
-            {/* Stats Section */}
-            <section className="container" style={{ marginTop: "-2rem", position: "relative", zIndex: 2 }}>
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                        gap: "1rem",
-                    }}
-                >
-                    {stats.map((stat, i) => (
-                        <motion.div
-                            key={stat.label}
-                            custom={i}
-                            variants={fadeUp}
-                            className="glass-card stat-card"
-                            style={{
-                                padding: "1.5rem",
-                                textAlign: "center",
-                            }}
-                        >
-                            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{stat.icon}</div>
-                            <div
-                                style={{
-                                    fontSize: "1.75rem",
-                                    fontWeight: 800,
-                                    background: "linear-gradient(135deg, #f0f0f5, #9495a5)",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                }}
-                            >
-                                {stat.value}
-                            </div>
-                            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                                {stat.label}
-                            </div>
-                        </motion.div>
-                    ))}
-                </motion.div>
-            </section>
+            {/* ============ HOW IT WORKS ============ */}
+            <section style={{ padding: "3rem 0 5rem" }}>
+                <div className="container">
+                    <div className="section-number">
+                        <span>How It Works</span>
+                    </div>
 
-            {/* How It Works */}
-            <section className="container" style={{ marginTop: "5rem" }}>
-                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                    <motion.h2
-                        custom={0}
-                        variants={fadeUp}
+                    <h2
                         style={{
-                            textAlign: "center",
-                            fontSize: "2rem",
-                            fontWeight: 700,
+                            fontFamily: "var(--font-heading)",
+                            fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+                            fontWeight: 800,
+                            letterSpacing: "-0.03em",
                             marginBottom: "3rem",
                         }}
                     >
-                        How It{" "}
-                        <span style={{ color: "var(--avax-red)" }}>Works</span>
-                    </motion.h2>
+                        Three Steps to{" "}
+                        <span className="gradient-text">Trustless Work</span>
+                    </h2>
 
-                    <div
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-50px" }}
                         style={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                            gap: "1.5rem",
+                            gridTemplateColumns: "repeat(3, 1fr)",
+                            gap: "1px",
+                            background: "var(--border-primary)",
                         }}
                     >
-                        {[
-                            {
-                                icon: "📝",
-                                title: "1. Create Bounty",
-                                desc: "Post a task on C-Chain and lock AVAX in escrow",
-                                chain: "C-Chain",
-                                chainColor: "var(--avax-red)",
-                            },
-                            {
-                                icon: "⚡",
-                                title: "2. Submit Solution",
-                                desc: "Freelancers submit solutions on App-Chain with minimal gas",
-                                chain: "App-Chain",
-                                chainColor: "var(--status-progress)",
-                            },
-                            {
-                                icon: "💰",
-                                title: "3. Get Paid",
-                                desc: "Approved submissions trigger automatic cross-chain payment",
-                                chain: "ICM Bridge",
-                                chainColor: "var(--status-completed)",
-                            },
-                        ].map((step, i) => (
+                        {steps.map((step, i) => (
                             <motion.div
-                                key={step.title}
-                                custom={i + 1}
+                                key={step.num}
+                                custom={i}
                                 variants={fadeUp}
-                                className="glass-card"
-                                style={{ padding: "2rem" }}
+                                style={{
+                                    padding: "2.5rem",
+                                    background: "var(--bg-primary)",
+                                }}
                             >
-                                <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>{step.icon}</div>
+                                <span
+                                    style={{
+                                        fontFamily: "var(--font-heading)",
+                                        fontSize: "3rem",
+                                        fontWeight: 800,
+                                        color: "var(--avax-red)",
+                                        opacity: 0.15,
+                                        lineHeight: 1,
+                                        display: "block",
+                                        marginBottom: "1rem",
+                                    }}
+                                >
+                                    {step.num}
+                                </span>
                                 <h3
                                     style={{
+                                        fontFamily: "var(--font-heading)",
                                         fontSize: "1.2rem",
                                         fontWeight: 700,
                                         marginBottom: "0.75rem",
@@ -257,75 +228,119 @@ export default function HomePage() {
                                 </h3>
                                 <p
                                     style={{
+                                        fontSize: "0.9rem",
                                         color: "var(--text-secondary)",
                                         lineHeight: 1.6,
-                                        marginBottom: "1rem",
-                                        fontSize: "0.95rem",
                                     }}
                                 >
                                     {step.desc}
                                 </p>
-                                <span
-                                    style={{
-                                        padding: "4px 12px",
-                                        borderRadius: "999px",
-                                        fontSize: "0.75rem",
-                                        fontWeight: 600,
-                                        color: step.chainColor,
-                                        background: `${step.chainColor}15`,
-                                        border: `1px solid ${step.chainColor}30`,
-                                    }}
-                                >
-                                    {step.chain}
-                                </span>
                             </motion.div>
                         ))}
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </section>
 
-            {/* Featured Bounties */}
-            <section className="container" style={{ marginTop: "5rem", marginBottom: "5rem" }}>
-                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                    <motion.div
-                        custom={0}
-                        variants={fadeUp}
+            {/* ============ FEATURED BOUNTIES ============ */}
+            <section style={{ padding: "3rem 0 6rem" }}>
+                <div className="container">
+                    <div className="section-number">
+                        <span>Featured Bounties</span>
+                    </div>
+
+                    <div
                         style={{
                             display: "flex",
-                            justifyContent: "space-between",
                             alignItems: "center",
+                            justifyContent: "space-between",
                             marginBottom: "2rem",
                         }}
                     >
-                        <h2 style={{ fontSize: "2rem", fontWeight: 700 }}>
-                            Featured{" "}
-                            <span style={{ color: "var(--avax-red)" }}>Bounties</span>
-                        </h2>
-                        <Link
-                            href="/bounties"
+                        <h2
                             style={{
-                                color: "var(--avax-red)",
-                                textDecoration: "none",
-                                fontWeight: 600,
-                                fontSize: "0.9rem",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
+                                fontFamily: "var(--font-heading)",
+                                fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+                                fontWeight: 800,
+                                letterSpacing: "-0.03em",
                             }}
                         >
-                            View All →
+                            Latest <span className="gradient-text">Opportunities</span>
+                        </h2>
+                        <Link href="/bounties" style={{ textDecoration: "none" }}>
+                            <button className="btn-ghost btn-sm">View All →</button>
                         </Link>
-                    </motion.div>
+                    </div>
 
-                    <div className="bounty-grid">
+                    <motion.div
+                        className="bounty-grid"
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-50px" }}
+                    >
                         {featuredBounties.map((bounty, i) => (
-                            <motion.div key={bounty.bountyId} custom={i + 1} variants={fadeUp}>
+                            <motion.div key={bounty.bountyId} custom={i} variants={fadeUp}>
                                 <BountyCard bounty={bounty} />
                             </motion.div>
                         ))}
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </section>
+
+            {/* ============ CTA SECTION ============ */}
+            <section
+                style={{
+                    padding: "6rem 0",
+                    textAlign: "center",
+                    borderTop: "1px solid var(--border-primary)",
+                    background:
+                        "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(232,65,66,0.06), transparent)",
+                }}
+            >
+                <div className="container">
+                    <p className="text-label" style={{ marginBottom: "1.5rem" }}>
+                        Ready to Start?
+                    </p>
+                    <h2
+                        className="text-display"
+                        style={{
+                            fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                            marginBottom: "1rem",
+                        }}
+                    >
+                        Build the Future of{" "}
+                        <span className="gradient-text">Freelancing</span>
+                    </h2>
+                    <p
+                        style={{
+                            color: "var(--text-secondary)",
+                            fontSize: "1.05rem",
+                            maxWidth: "500px",
+                            margin: "0 auto 2rem",
+                            lineHeight: 1.6,
+                        }}
+                    >
+                        Post your first bounty or start solving challenges. No middlemen, no
+                        borders, no trust issues.
+                    </p>
+                    <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+                        <Link href="/create" style={{ textDecoration: "none" }}>
+                            <button className="btn-avax">Create Bounty →</button>
+                        </Link>
+                        <Link href="/bounties" style={{ textDecoration: "none" }}>
+                            <button className="btn-ghost">Browse Bounties</button>
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            {/* ============ RESPONSIVE OVERRIDE ============ */}
+            <style jsx>{`
+                @media (max-width: 768px) {
+                    :global(.stat-card) {
+                        text-align: center;
+                    }
+                }
+            `}</style>
         </main>
     );
 }

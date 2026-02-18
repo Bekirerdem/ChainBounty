@@ -17,384 +17,265 @@ const fadeUp = {
 
 export default function BountyDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const bounty = getBountyById(Number(id));
-    const submissions = bounty ? getSubmissionsForBounty(bounty.bountyId) : [];
-    const [showSubmitModal, setShowSubmitModal] = useState(false);
-    const [solutionUrl, setSolutionUrl] = useState("");
-    const [submitted, setSubmitted] = useState(false);
+    const bountyId = parseInt(id, 10);
+    const bounty = getBountyById(bountyId);
+    const submissions = getSubmissionsForBounty(bountyId);
+
+    const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+    const [repoLink, setRepoLink] = useState("");
+    const [demoLink, setDemoLink] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!bounty) {
         return (
-            <main className="container" style={{ paddingTop: "4rem", textAlign: "center" }}>
-                <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>🔍</div>
-                <h1 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem" }}>Bounty Not Found</h1>
-                <p style={{ color: "var(--text-secondary)", marginBottom: "2rem" }}>
-                    The bounty you&apos;re looking for doesn&apos;t exist or has been removed.
-                </p>
-                <Link href="/bounties">
-                    <button className="btn-primary">← Back to Bounties</button>
-                </Link>
-            </main>
+            <div className="container pt-32 pb-20 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-4xl font-display font-bold mb-4 text-avax-red">404</h1>
+                    <p className="text-gray-400 mb-8">Bounty not found.</p>
+                    <Link href="/bounties" className="btn-ghost">
+                        Back to Bounties
+                    </Link>
+                </div>
+            </div>
         );
     }
 
-    const deadlineDate = new Date(bounty.deadline * 1000);
+    const amount = bounty.reward;
+    const currency = "AVAX";
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        setIsSubmitting(false);
+        setIsSubmitModalOpen(false);
+        // In a real app, we would refresh the data
+        alert("Submission received! (Mock)");
+    };
 
     return (
-        <main className="container" style={{ paddingTop: "2rem", paddingBottom: "4rem" }}>
-            {/* Breadcrumb */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginBottom: "1.5rem" }}>
-                <Link
-                    href="/bounties"
-                    style={{
-                        color: "var(--text-muted)",
-                        textDecoration: "none",
-                        fontSize: "0.85rem",
-                        fontWeight: 500,
-                    }}
-                >
-                    ← Back to Bounties
-                </Link>
-            </motion.div>
-
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 340px",
-                    gap: "2rem",
-                    alignItems: "start",
-                }}
+        <main className="container pt-32 pb-20 min-h-screen">
+            <Link 
+                href="/bounties" 
+                className="inline-flex items-center text-sm text-gray-400 hover:text-white transition-colors mb-8 group"
             >
-                {/* Left Column: Main Content */}
-                <motion.div initial="hidden" animate="visible">
-                    {/* Bounty Header */}
-                    <motion.div custom={0} variants={fadeUp} className="glass-card" style={{ padding: "2rem", marginBottom: "1.5rem" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
-                            <StatusBadge status={bounty.status} size="md" />
-                            <div style={{ display: "flex", gap: "6px" }}>
-                                {bounty.tags.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        style={{
-                                            padding: "4px 10px",
-                                            borderRadius: "6px",
-                                            fontSize: "0.75rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-secondary)",
-                                            background: "rgba(255,255,255,0.05)",
-                                            border: "1px solid rgba(255,255,255,0.06)",
-                                        }}
-                                    >
-                                        {tag}
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="mr-2 group-hover:-translate-x-1 transition-transform"
+                >
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+                Back to Bounties
+            </Link>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content */}
+                <motion.div 
+                    initial="hidden" 
+                    animate="visible" 
+                    className="lg:col-span-2 space-y-8"
+                >
+                    <motion.div 
+                        custom={0} 
+                        variants={fadeUp} 
+                        className="glass-card p-8 border-l-4 border-l-avax-red"
+                    >
+                        <div className="flex items-start justify-between mb-6">
+                            <div>
+                                <h1 className="text-3xl font-display font-bold mb-2">{bounty.title}</h1>
+                                <div className="flex items-center gap-4 text-sm text-gray-400">
+                                    <span className="flex items-center gap-1">
+                                        <div className="w-4 h-4 rounded-full bg-linear-to-r from-avax-red to-orange-500 flex items-center justify-center text-[10px] text-white font-bold">
+                                            {formatAddress(bounty.creator).charAt(0)}
+                                        </div>
+                                        {formatAddress(bounty.creator)}
                                     </span>
-                                ))}
+                                    <span>•</span>
+                                    <span>Created {new Date(bounty.createdAt).toLocaleDateString()}</span>
+                                </div>
                             </div>
+                            <StatusBadge status={bounty.status} />
                         </div>
 
-                        <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "1rem", lineHeight: 1.3 }}>
-                            {bounty.title}
-                        </h1>
-
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1.5rem",
-                                fontSize: "0.85rem",
-                                color: "var(--text-muted)",
-                                marginBottom: "1.5rem",
-                            }}
-                        >
-                            <span>Created by <strong style={{ color: "var(--text-secondary)" }}>{formatAddress(bounty.creator)}</strong></span>
-                            <span>•</span>
-                            <span>⏰ {formatDeadline(bounty.deadline)}</span>
-                            <span>•</span>
-                            <span>📝 {submissions.length} submissions</span>
+                        <div className="prose prose-invert max-w-none text-gray-300">
+                            <h3 className="text-white font-display text-lg mb-2">Description</h3>
+                            <p className="whitespace-pre-line leading-relaxed">
+                                {bounty.description}
+                            </p>
                         </div>
 
-                        <div
-                            style={{
-                                padding: "1.25rem",
-                                borderRadius: "12px",
-                                background: "rgba(255,255,255,0.02)",
-                                border: "1px solid var(--border-glass)",
-                                lineHeight: 1.8,
-                                color: "var(--text-secondary)",
-                                fontSize: "0.95rem",
-                            }}
-                        >
-                            {bounty.description}
+                        <div className="mt-8 flex flex-wrap gap-2">
+                            {bounty.tags.map((tag) => (
+                                <span 
+                                    key={tag} 
+                                    className="px-3 py-1 bg-white/5 border border-white/10 text-xs text-gray-400 uppercase tracking-wider font-semibold hover:border-avax-red/50 hover:text-white transition-colors"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
                         </div>
                     </motion.div>
 
-                    {/* Submissions */}
-                    <motion.div custom={1} variants={fadeUp}>
-                        <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>
-                            Submissions ({submissions.length})
+                    {/* Submissions Section */}
+                    <motion.div custom={2} variants={fadeUp}>
+                        <h2 className="text-2xl font-display font-bold mb-6 flex items-center gap-2">
+                            Submissions 
+                            <span className="text-sm font-normal text-gray-500 bg-white/5 px-2 py-0.5 rounded-full">
+                                {submissions.length}
+                            </span>
                         </h2>
-
-                        {submissions.length > 0 ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        
+                        {submissions.length === 0 ? (
+                            <div className="glass-card p-8 text-center border-dashed border-2 border-white/10">
+                                <p className="text-gray-400">No submissions yet. Be the first!</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
                                 {submissions.map((sub) => (
-                                    <div
-                                        key={sub.submissionId}
-                                        className="glass-card"
-                                        style={{
-                                            padding: "1.25rem",
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                        }}
-                                    >
+                                    <div key={sub.submissionId} className="glass-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 group hover:border-avax-red/30 transition-colors">
                                         <div>
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "10px",
-                                                    marginBottom: "6px",
-                                                }}
-                                            >
-                                                <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                                                    {formatAddress(sub.submitter)}
-                                                </span>
-                                                {sub.approved && (
-                                                    <span
-                                                        style={{
-                                                            padding: "2px 8px",
-                                                            borderRadius: "6px",
-                                                            fontSize: "0.7rem",
-                                                            fontWeight: 600,
-                                                            color: "var(--status-open)",
-                                                            background: "rgba(74, 222, 128, 0.1)",
-                                                        }}
-                                                    >
-                                                        ✓ Approved
-                                                    </span>
-                                                )}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="font-semibold text-white">{formatAddress(sub.submitter)}</span>
+                                                <span className="text-xs text-gray-500">• {new Date(sub.submittedAt).toLocaleDateString()}</span>
                                             </div>
-                                            <a
-                                                href={sub.solutionURI}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={{
-                                                    color: "var(--status-completed)",
-                                                    fontSize: "0.8rem",
-                                                    textDecoration: "none",
-                                                }}
-                                            >
-                                                🔗 {sub.solutionURI}
-                                            </a>
+                                            <p className="text-sm text-gray-400 line-clamp-2">{sub.description}</p>
                                         </div>
-
-                                        <div style={{ display: "flex", gap: "8px" }}>
-                                            {!sub.approved && bounty.status !== "Completed" && (
-                                                <>
-                                                    <button
-                                                        className="btn-primary"
-                                                        style={{ fontSize: "0.75rem", padding: "6px 14px" }}
-                                                        onClick={() => alert("Mock: Solution approved! Payment will be sent cross-chain.")}
-                                                    >
-                                                        ✓ Approve
-                                                    </button>
-                                                    <button
-                                                        style={{
-                                                            fontSize: "0.75rem",
-                                                            padding: "6px 14px",
-                                                            borderRadius: "8px",
-                                                            border: "1px solid rgba(248, 113, 113, 0.3)",
-                                                            background: "rgba(248, 113, 113, 0.1)",
-                                                            color: "var(--status-disputed)",
-                                                            cursor: "pointer",
-                                                            fontWeight: 600,
-                                                        }}
-                                                        onClick={() => alert("Mock: Dispute opened!")}
-                                                    >
-                                                        ⚠ Dispute
-                                                    </button>
-                                                </>
+                                        <div className="flex items-center gap-3">
+                                            {sub.repoLink && (
+                                                <a 
+                                                    href={sub.repoLink} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="btn-ghost text-xs py-1.5 px-3"
+                                                >
+                                                    Repo
+                                                </a>
+                                            )}
+                                            {sub.demoLink && (
+                                                <a 
+                                                    href={sub.demoLink} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="btn-ghost text-xs py-1.5 px-3"
+                                                >
+                                                    Demo
+                                                </a>
                                             )}
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        ) : (
-                            <div
-                                className="glass-card"
-                                style={{ padding: "3rem 2rem", textAlign: "center" }}
-                            >
-                                <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>📭</div>
-                                <p style={{ color: "var(--text-secondary)" }}>
-                                    No submissions yet. Be the first to submit a solution!
-                                </p>
-                            </div>
                         )}
                     </motion.div>
                 </motion.div>
 
-                {/* Right Column: Sidebar */}
-                <motion.div
+                {/* Sidebar */}
+                <motion.div 
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    style={{ position: "sticky", top: "80px" }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="space-y-6"
                 >
-                    {/* Reward Card */}
-                    <div
-                        className="glass-card"
-                        style={{
-                            padding: "2rem",
-                            marginBottom: "1rem",
-                            textAlign: "center",
-                            background: "linear-gradient(135deg, rgba(232, 65, 66, 0.05), rgba(18, 20, 28, 0.6))",
-                            border: "1px solid rgba(232, 65, 66, 0.15)",
-                        }}
-                    >
-                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                            Reward
+                    <div className="glass-card p-6 sticky top-24">
+                        <div className="mb-6">
+                            <h3 className="text-sm uppercase tracking-wider text-gray-500 font-semibold mb-1">Reward</h3>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-display font-bold text-white">{amount}</span>
+                                <span className="text-xl font-bold text-avax-red">{currency}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                                ≈ ${(parseFloat(amount) * 25).toLocaleString()} USD (Est.)
+                            </p>
                         </div>
-                        <div
-                            style={{
-                                fontSize: "2.5rem",
-                                fontWeight: 800,
-                                background: "linear-gradient(135deg, #E84142, #ff6b6b)",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                                marginBottom: "4px",
-                            }}
-                        >
-                            {bounty.reward} AVAX
-                        </div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                            Locked in escrow on C-Chain
-                        </div>
-                    </div>
 
-                    {/* Info Card */}
-                    <div className="glass-card" style={{ padding: "1.5rem", marginBottom: "1rem" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                            <div>
-                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "4px" }}>Deadline</div>
-                                <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                                    {deadlineDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                                </div>
-                            </div>
-                            <div style={{ borderTop: "1px solid var(--border-glass)", paddingTop: "1rem" }}>
-                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "4px" }}>Creator</div>
-                                <div style={{ fontWeight: 600, fontSize: "0.9rem", fontFamily: "monospace" }}>
-                                    {formatAddress(bounty.creator)}
-                                </div>
-                            </div>
-                            <div style={{ borderTop: "1px solid var(--border-glass)", paddingTop: "1rem" }}>
-                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "4px" }}>Bounty ID</div>
-                                <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>#{bounty.bountyId}</div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Action Button */}
-                    {bounty.status === "Open" && (
-                        <button
-                            className="btn-primary"
-                            onClick={() => setShowSubmitModal(true)}
-                            style={{
-                                width: "100%",
-                                padding: "14px",
-                                fontSize: "1rem",
-                                borderRadius: "12px",
-                            }}
-                        >
-                            📤 Submit Solution
-                        </button>
-                    )}
+                        <div className="mb-8">
+                            <h3 className="text-sm uppercase tracking-wider text-gray-500 font-semibold mb-1">Deadline</h3>
+                            <p className="text-lg font-outfit text-white">{formatDeadline(bounty.deadline)}</p>
+                        </div>
+
+                        {bounty.status === "Open" && (
+                            <button 
+                                onClick={() => setIsSubmitModalOpen(true)}
+                                className="btn-avax w-full justify-center group"
+                            >
+                                Submit Work
+                                <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                            </button>
+                        )}
+                        
+                        {bounty.status !== "Open" && (
+                            <div className="w-full py-3 bg-white/5 text-center text-gray-400 font-medium cursor-not-allowed border border-white/5">
+                                Submissions Closed
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
             </div>
 
-            {/* Submit Modal */}
-            {showSubmitModal && (
-                <div
-                    style={{
-                        position: "fixed",
-                        inset: 0,
-                        background: "rgba(0,0,0,0.7)",
-                        backdropFilter: "blur(8px)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1000,
-                    }}
-                    onClick={() => setShowSubmitModal(false)}
-                >
-                    <motion.div
+            {/* Submission Modal */}
+            {isSubmitModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="glass-card"
-                        style={{
-                            padding: "2rem",
-                            maxWidth: "500px",
-                            width: "90%",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                        className="glass-card max-w-lg w-full p-8 border-avax-red/30"
                     >
-                        {!submitted ? (
-                            <>
-                                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-                                    Submit Solution
-                                </h3>
-                                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
-                                    Provide a link to your solution (GitHub repo, IPFS, etc.)
-                                </p>
-                                <input
-                                    type="url"
-                                    placeholder="https://github.com/your-repo/solution"
-                                    value={solutionUrl}
-                                    onChange={(e) => setSolutionUrl(e.target.value)}
-                                    className="form-input"
-                                    style={{ width: "100%", marginBottom: "1rem" }}
+                        <h2 className="text-2xl font-display font-bold mb-6">Submit Your Work</h2>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+                                    Repository Link
+                                </label>
+                                <input 
+                                    type="url" 
+                                    required
+                                    placeholder="https://github.com/..."
+                                    value={repoLink}
+                                    onChange={(e) => setRepoLink(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/10 p-3 text-white focus:border-avax-red focus:outline-none transition-colors font-outfit"
                                 />
-                                <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-                                    <button
-                                        onClick={() => setShowSubmitModal(false)}
-                                        style={{
-                                            padding: "10px 20px",
-                                            borderRadius: "10px",
-                                            border: "1px solid var(--border-glass)",
-                                            background: "transparent",
-                                            color: "var(--text-secondary)",
-                                            cursor: "pointer",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        className="btn-primary"
-                                        onClick={() => {
-                                            setSubmitted(true);
-                                            setTimeout(() => {
-                                                setShowSubmitModal(false);
-                                                setSubmitted(false);
-                                                setSolutionUrl("");
-                                            }, 2000);
-                                        }}
-                                        style={{ padding: "10px 20px" }}
-                                    >
-                                        🚀 Submit
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <div style={{ textAlign: "center", padding: "2rem 0" }}>
-                                <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✅</div>
-                                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-                                    Solution Submitted!
-                                </h3>
-                                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                                    Your solution has been submitted on the App-Chain (mock)
-                                </p>
                             </div>
-                        )}
+                            
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold uppercase tracking-wider text-gray-400">
+                                    Demo Link (Optional)
+                                </label>
+                                <input 
+                                    type="url" 
+                                    placeholder="https://..."
+                                    value={demoLink}
+                                    onChange={(e) => setDemoLink(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/10 p-3 text-white focus:border-avax-red focus:outline-none transition-colors font-outfit"
+                                />
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsSubmitModalOpen(false)}
+                                    className="btn-ghost flex-1 justify-center"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={isSubmitting}
+                                    className="btn-avax flex-1 justify-center"
+                                >
+                                    {isSubmitting ? "Submitting..." : "Submit Project"}
+                                </button>
+                            </div>
+                        </form>
                     </motion.div>
                 </div>
             )}
