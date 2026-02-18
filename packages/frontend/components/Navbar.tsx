@@ -56,12 +56,11 @@ export default function Navbar() {
 
                 {/* Desktop Nav Links */}
                 <div
+                    className="nav-desktop hidden md:flex"
                     style={{
-                        display: "flex",
                         alignItems: "center",
                         gap: "2rem",
                     }}
-                    className="nav-desktop"
                 >
                     {navLinks.map((link) => (
                         <Link
@@ -132,9 +131,8 @@ export default function Navbar() {
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        className="mobile-toggle"
+                        className="mobile-toggle md:hidden"
                         style={{
-                            display: "none",
                             background: "transparent",
                             border: "none",
                             color: "var(--text-primary)",
@@ -182,17 +180,6 @@ export default function Navbar() {
                     ))}
                 </div>
             )}
-
-            <style jsx>{`
-                @media (max-width: 768px) {
-                    .nav-desktop {
-                        display: none !important;
-                    }
-                    .mobile-toggle {
-                        display: block !important;
-                    }
-                }
-            `}</style>
         </nav>
     );
 }
