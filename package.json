@@ -1,0 +1,32 @@
+{
+  "name": "chainbounty",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "description": "Cross-chain bounty & freelance platform on Avalanche — create bounties on C-Chain, execute on App-Chain, settle payments via ICM.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "avalanche",
+    "cross-chain",
+    "bounty",
+    "teleporter",
+    "icm",
+    "web3"
+  ],
+  "license": "MIT"
+}

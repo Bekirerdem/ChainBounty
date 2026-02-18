@@ -1,0 +1,67 @@
+{
+    "log-level": "info",
+    "p-chain-api": {
+        "base-url": "https://api.avax-test.network",
+        "query-parameters": {}
+    },
+    "source-blockchains": [
+        {
+            "subnet-id": "<YOUR_SUBNET_ID>",
+            "blockchain-id": "<C_CHAIN_BLOCKCHAIN_ID>",
+            "vm": "evm",
+            "rpc-endpoint": {
+                "base-url": "https://api.avax-test.network/ext/bc/C/rpc"
+            },
+            "warp-api-endpoint": {
+                "base-url": "https://api.avax-test.network/ext/bc/C/rpc"
+            },
+            "message-contracts": {
+                "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf": {
+                    "message-format": "teleporter",
+                    "settings": {
+                        "reward-address": "<YOUR_RELAYER_REWARD_ADDRESS>"
+                    }
+                }
+            }
+        },
+        {
+            "subnet-id": "<YOUR_APP_CHAIN_SUBNET_ID>",
+            "blockchain-id": "<APP_CHAIN_BLOCKCHAIN_ID>",
+            "vm": "evm",
+            "rpc-endpoint": {
+                "base-url": "http://127.0.0.1:9650/ext/bc/<APP_CHAIN_BLOCKCHAIN_ID>/rpc"
+            },
+            "warp-api-endpoint": {
+                "base-url": "http://127.0.0.1:9650/ext/bc/<APP_CHAIN_BLOCKCHAIN_ID>/rpc"
+            },
+            "message-contracts": {
+                "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf": {
+                    "message-format": "teleporter",
+                    "settings": {
+                        "reward-address": "<YOUR_RELAYER_REWARD_ADDRESS>"
+                    }
+                }
+            }
+        }
+    ],
+    "destination-blockchains": [
+        {
+            "subnet-id": "<YOUR_SUBNET_ID>",
+            "blockchain-id": "<C_CHAIN_BLOCKCHAIN_ID>",
+            "vm": "evm",
+            "rpc-endpoint": {
+                "base-url": "https://api.avax-test.network/ext/bc/C/rpc"
+            },
+            "account-private-key": "<RELAYER_PRIVATE_KEY>"
+        },
+        {
+            "subnet-id": "<YOUR_APP_CHAIN_SUBNET_ID>",
+            "blockchain-id": "<APP_CHAIN_BLOCKCHAIN_ID>",
+            "vm": "evm",
+            "rpc-endpoint": {
+                "base-url": "http://127.0.0.1:9650/ext/bc/<APP_CHAIN_BLOCKCHAIN_ID>/rpc"
+            },
+            "account-private-key": "<RELAYER_PRIVATE_KEY>"
+        }
+    ]
+}

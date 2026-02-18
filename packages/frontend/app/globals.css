@@ -1,0 +1,297 @@
+@import "tailwindcss";
+
+/* ============================================================
+   ChainBounty — Design System
+   Premium dark glassmorphism with Avalanche red accent
+   ============================================================ */
+
+:root {
+  /* Avalanche Brand Colors */
+  --avax-red: #e84142;
+  --avax-red-glow: rgba(232, 65, 66, 0.3);
+
+  /* Surface Colors */
+  --bg-primary: #0a0b0f;
+  --bg-secondary: #12141c;
+  --bg-glass: rgba(18, 20, 28, 0.6);
+  --bg-glass-hover: rgba(18, 20, 28, 0.8);
+
+  /* Border */
+  --border-glass: rgba(255, 255, 255, 0.06);
+  --border-glass-hover: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --text-primary: #f0f0f5;
+  --text-secondary: #9495a5;
+  --text-muted: #5a5b6a;
+
+  /* Status Colors */
+  --status-open: #4ade80;
+  --status-progress: #fbbf24;
+  --status-completed: #22d3ee;
+  --status-disputed: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-image:
+    radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(232, 65, 66, 0.08),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 60%,
+      rgba(34, 211, 238, 0.04),
+      transparent
+    );
+}
+
+/* Glass Card Component */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-glass-hover);
+}
+
+/* Glow Button */
+.btn-primary {
+  background: linear-gradient(135deg, var(--avax-red), #c0392b);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px var(--avax-red-glow);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--avax-red-glow);
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-open {
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--status-open);
+}
+.badge-progress {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--status-progress);
+}
+.badge-completed {
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--status-completed);
+}
+.badge-disputed {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--status-disputed);
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ============================================================
+   Navbar
+   ============================================================ */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10, 11, 15, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-glass);
+  padding: 0 1.5rem;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-glass);
+  padding: 3rem 1.5rem 2rem;
+  margin-top: 4rem;
+}
+
+/* ============================================================
+   Cards & Grids
+   ============================================================ */
+.bounty-card {
+  padding: 1.5rem;
+  cursor: pointer;
+}
+
+.bounty-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.bounty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.stat-card {
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+}
+
+/* ============================================================
+   Forms
+   ============================================================ */
+.form-card {
+  border: 1px solid var(--border-glass);
+}
+
+.form-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: rgba(232, 65, 66, 0.4);
+  box-shadow: 0 0 0 3px rgba(232, 65, 66, 0.08);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-error {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--status-disputed);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   Hero Section
+   ============================================================ */
+.hero-section {
+  position: relative;
+  padding: 6rem 1.5rem 4rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--avax-red),
+    #ff6b6b,
+    var(--status-completed),
+    var(--avax-red)
+  );
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 768px) {
+  .bounty-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-section {
+    padding: 4rem 1rem 2.5rem;
+  }
+}
