@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Providers } from "./providers";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -31,6 +32,8 @@ export const metadata: Metadata = {
     ],
 };
 
+import ScrollManager from "@/components/ScrollManager";
+
 export default function RootLayout({
     children,
 }: {
@@ -39,15 +42,14 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
             <body style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-                <Navbar />
-                <div style={{ flex: 1 }}>{children}</div>
-                <Footer />
+                <Providers>
+                    <ScrollManager />
+                    <Navbar />
+                    <div style={{ flex: 1 }}>{children}</div>
+                    <Footer />
+                </Providers>
             </body>
         </html>
     );
 }
 
-// TODO: Hafta 3 — Web3 Provider wrapper eklenecek:
-// - WagmiProvider
-// - RainbowKitProvider
-// - QueryClientProvider
