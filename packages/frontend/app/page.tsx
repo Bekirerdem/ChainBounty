@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import BountyCard from "@/components/BountyCard";
+import Hero from "@/components/Hero";
 import { mockBounties, mockStats } from "@/lib/mock-data";
 
 const fadeUp = {
@@ -60,66 +61,7 @@ export default function HomePage() {
     return (
         <main>
             {/* ============ HERO SECTION ============ */}
-            <section className="hero-cinematic">
-                <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    style={{ position: "relative", zIndex: 1, maxWidth: "900px" }}
-                >
-                    {/* Label */}
-                    <motion.p
-                        custom={0}
-                        variants={fadeUp}
-                        className="text-label"
-                        style={{ marginBottom: "1.5rem" }}
-                    >
-                        Built on Avalanche — Cross-Chain Protocol
-                    </motion.p>
-
-                    {/* Hero Title */}
-                    <motion.h1
-                        custom={1}
-                        variants={fadeUp}
-                        className="text-display-xl"
-                        style={{ marginBottom: "1.5rem" }}
-                    >
-                        Ship Work.{" "}
-                        <span className="gradient-text">Get Paid.</span>
-                        <br />
-                        Cross-Chain.
-                    </motion.h1>
-
-                    {/* Subtitle */}
-                    <motion.p
-                        custom={2}
-                        variants={fadeUp}
-                        style={{
-                            fontSize: "1.1rem",
-                            color: "var(--text-secondary)",
-                            maxWidth: "600px",
-                            margin: "0 auto 2.5rem",
-                            lineHeight: 1.6,
-                        }}
-                    >
-                        Create bounties on C-Chain. Submit solutions on App-Chain with
-                        near-zero gas. Settle payments trustlessly via ICM Teleporter.
-                    </motion.p>
-
-                    {/* CTA */}
-                    <motion.div
-                        custom={3}
-                        variants={fadeUp}
-                        style={{ display: "flex", gap: "1rem", justifyContent: "center" }}
-                    >
-                        <Link href="/bounties" style={{ textDecoration: "none" }}>
-                            <button className="btn-avax">Explore Bounties →</button>
-                        </Link>
-                        <Link href="/create" style={{ textDecoration: "none" }}>
-                            <button className="btn-ghost">Post a Bounty</button>
-                        </Link>
-                    </motion.div>
-                </motion.div>
-            </section>
+            <Hero />
 
             {/* ============ MARQUEE STRIP ============ */}
             <div className="marquee-strip">
@@ -133,18 +75,13 @@ export default function HomePage() {
             </div>
 
             {/* ============ STATS ============ */}
-            <section style={{ padding: "5rem 0" }}>
+            <section style={{ padding: "6rem 0 5rem" }}>
                 <div className="container">
                     <motion.div
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, margin: "-50px" }}
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(4, 1fr)",
-                            gap: "1px",
-                            background: "var(--border-primary)",
-                        }}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-px bg-(--border-primary)"
                     >
                         {stats.map((stat, i) => (
                             <motion.div
@@ -162,7 +99,7 @@ export default function HomePage() {
             </section>
 
             {/* ============ HOW IT WORKS ============ */}
-            <section style={{ padding: "3rem 0 5rem" }}>
+            <section style={{ padding: "4rem 0 6rem" }}>
                 <div className="container">
                     <div className="section-number">
                         <span>How It Works</span>
@@ -181,16 +118,12 @@ export default function HomePage() {
                         <span className="gradient-text">Trustless Work</span>
                     </h2>
 
+                    {/* Responsive: 1 col on mobile, 3 on desktop */}
                     <motion.div
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, margin: "-50px" }}
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(3, 1fr)",
-                            gap: "1px",
-                            background: "var(--border-primary)",
-                        }}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-px bg-(--border-primary)"
                     >
                         {steps.map((step, i) => (
                             <motion.div
@@ -205,13 +138,13 @@ export default function HomePage() {
                                 <span
                                     style={{
                                         fontFamily: "var(--font-heading)",
-                                        fontSize: "3rem",
+                                        fontSize: "3.5rem",
                                         fontWeight: 800,
                                         color: "var(--avax-red)",
-                                        opacity: 0.15,
+                                        opacity: 0.12,
                                         lineHeight: 1,
                                         display: "block",
-                                        marginBottom: "1rem",
+                                        marginBottom: "1.5rem",
                                     }}
                                 >
                                     {step.num}
@@ -219,18 +152,19 @@ export default function HomePage() {
                                 <h3
                                     style={{
                                         fontFamily: "var(--font-heading)",
-                                        fontSize: "1.2rem",
+                                        fontSize: "1.15rem",
                                         fontWeight: 700,
                                         marginBottom: "0.75rem",
+                                        letterSpacing: "-0.01em",
                                     }}
                                 >
                                     {step.title}
                                 </h3>
                                 <p
                                     style={{
-                                        fontSize: "0.9rem",
+                                        fontSize: "0.875rem",
                                         color: "var(--text-secondary)",
-                                        lineHeight: 1.6,
+                                        lineHeight: 1.65,
                                     }}
                                 >
                                     {step.desc}
@@ -242,19 +176,15 @@ export default function HomePage() {
             </section>
 
             {/* ============ FEATURED BOUNTIES ============ */}
-            <section style={{ padding: "3rem 0 6rem" }}>
+            <section style={{ padding: "4rem 0 7rem" }}>
                 <div className="container">
                     <div className="section-number">
                         <span>Featured Bounties</span>
                     </div>
 
                     <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            marginBottom: "2rem",
-                        }}
+                        className="flex flex-wrap items-end justify-between gap-4"
+                        style={{ marginBottom: "2.5rem" }}
                     >
                         <h2
                             style={{
@@ -333,14 +263,7 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ============ RESPONSIVE OVERRIDE ============ */}
-            <style jsx>{`
-                @media (max-width: 768px) {
-                    :global(.stat-card) {
-                        text-align: center;
-                    }
-                }
-            `}</style>
+
         </main>
     );
 }
