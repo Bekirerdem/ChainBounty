@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { formatAddress } from "@/lib/mock-data";
-
-const MOCK_WALLET = "0x1a2B3c4D5e6F7890AbCdEf1234567890aBcDeF12";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const navLinks = [
     { href: "/", label: "Home" },
@@ -15,7 +13,6 @@ const navLinks = [
 
 export default function Navbar() {
     const pathname = usePathname();
-    const [connected, setConnected] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
@@ -99,34 +96,80 @@ export default function Navbar() {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    {/* Wallet Connect */}
-                    <button
-                        onClick={() => setConnected(!connected)}
-                        className={connected ? "btn-ghost btn-sm" : "btn-avax btn-sm"}
-                        style={
-                            connected
-                                ? { borderColor: "var(--border-avax)", color: "var(--avax-red)" }
-                                : {}
-                        }
-                    >
-                        {connected ? (
-                            <>
-                                <span
-                                    style={{
-                                        width: "6px",
-                                        height: "6px",
-                                        borderRadius: "50%",
-                                        background: "var(--status-open)",
-                                        boxShadow: "0 0 8px var(--status-open)",
-                                        display: "inline-block",
-                                    }}
-                                />
-                                {formatAddress(MOCK_WALLET)}
-                            </>
-                        ) : (
-                            "Connect"
-                        )}
-                    </button>
+                    {/* Wallet Connect — RainbowKit */}
+                    <ConnectButton.Custom>
+                        {({
+                            account,
+                            chain,
+                            openAccountModal,
+                            openChainModal,
+                            openConnectModal,
+                            mounted,
+                        }) => {
+                            const ready = mounted;
+                            const connected = ready && account && chain;
+
+                            return (
+                                <div
+                                    {...(!ready && {
+                                        "aria-hidden": true,
+                                        style: { opacity: 0, pointerEvents: "none", userSelect: "none" },
+                                    })}
+                                >
+                                    {!connected ? (
+                                        <button
+                                            onClick={openConnectModal}
+                                            className="btn-avax btn-sm"
+                                        >
+                                            Connect
+                                        </button>
+                                    ) : chain.unsupported ? (
+                                        <button
+                                            onClick={openChainModal}
+                                            className="btn-sm"
+                                            style={{
+                                                background: "rgba(239,68,68,0.15)",
+                                                border: "1px solid #ef4444",
+                                                color: "#ef4444",
+                                                borderRadius: "6px",
+                                                padding: "6px 12px",
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                cursor: "pointer",
+                                                letterSpacing: "0.04em",
+                                            }}
+                                        >
+                                            Wrong Network
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={openAccountModal}
+                                            className="btn-ghost btn-sm"
+                                            style={{
+                                                borderColor: "var(--border-avax)",
+                                                color: "var(--avax-red)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "6px",
+                                            }}
+                                        >
+                                            <span
+                                                style={{
+                                                    width: "6px",
+                                                    height: "6px",
+                                                    borderRadius: "50%",
+                                                    background: "var(--status-open)",
+                                                    boxShadow: "0 0 8px var(--status-open)",
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                            {account.displayName}
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        }}
+                    </ConnectButton.Custom>
 
                     {/* Mobile Menu Toggle */}
                     <button
