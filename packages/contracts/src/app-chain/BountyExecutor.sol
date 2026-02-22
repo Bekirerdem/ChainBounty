@@ -1,266 +1,116 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
-import "@teleporter/ITeleporterMessenger.sol";
-import "@teleporter/ITeleporterReceiver.sol";
-import "../interfaces/IBountyTypes.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title BountyExecutor
-/// @notice App-Chain kontratı — Submission yönetimi, doğrulama, onay
-/// @dev Ucuz gas ortamında çalışır, sonuçları C-Chain'e Teleporter ile bildirir
-contract BountyExecutor is ITeleporterReceiver, IBountyTypes {
-    // ============================================================
-    //                      STATE VARIABLES
-    // ============================================================
-
-    ITeleporterMessenger public immutable teleporterMessenger;
-
-    /// @notice C-Chain blockchain ID'si
-    bytes32 public immutable cChainBlockchainID;
-
-    /// @notice C-Chain'deki BountyManager kontrat adresi
-    address public immutable bountyManagerAddress;
-
-    /// @notice Bounty ID -> BountyData (C-Chain'den mirror)
-    mapping(uint256 => BountyData) public bounties;
-
-    /// @notice Submission counter
-    uint256 public nextSubmissionId;
-
-    /// @notice Submission ID -> Submission data
-    mapping(uint256 => Submission) public submissions;
-
-    /// @notice Bounty ID -> submission ID'leri
-    mapping(uint256 => uint256[]) public bountySubmissions;
-
-    // ============================================================
-    //                         EVENTS
-    // ============================================================
-
-    event BountyReceived(
-        uint256 indexed bountyId,
-        string title,
-        uint256 reward,
-        uint256 deadline
-    );
-
-    event SolutionSubmitted(
-        uint256 indexed submissionId,
-        uint256 indexed bountyId,
-        address indexed submitter,
-        string solutionURI
-    );
-
-    event SolutionApproved(
-        uint256 indexed submissionId,
-        uint256 indexed bountyId,
-        address submitter
-    );
-
-    event DisputeOpened(
-        uint256 indexed bountyId,
-        address indexed opener
-    );
-
-    event BountyCancelledOnAppChain(uint256 indexed bountyId);
-
-    // ============================================================
-    //                         ERRORS
-    // ============================================================
-
-    error InvalidCaller();
-    error InvalidSourceChain();
-    error InvalidSender();
-    error BountyNotFound();
-    error BountyNotOpen();
-    error SubmissionNotFound();
-    error NotBountyCreator();
-    error DeadlinePassed();
-    error AlreadyApproved();
-
-    // ============================================================
-    //                       CONSTRUCTOR
-    // ============================================================
-
-    constructor(
-        address _teleporterMessenger,
-        bytes32 _cChainBlockchainID,
-        address _bountyManagerAddress
-    ) {
-        teleporterMessenger = ITeleporterMessenger(_teleporterMessenger);
-        cChainBlockchainID = _cChainBlockchainID;
-        bountyManagerAddress = _bountyManagerAddress;
+/**
+ * @title BountyExecutor
+ * @dev App-Chain (veya L1) üzerinde çalışan, geliştiricilerin teklif (Proposal) verip, işverenlerin onayladığı operasyon kontratı.
+ */
+contract BountyExecutor is ReentrancyGuard {
+    // --- Structs ---
+    struct Proposal {
+        uint256 proposalId;
+        uint256 bountyId; // C-Chain'deki Bounty kimliği
+        address developer;
+        uint256 requestedAmount; // Geliştiricinin talep ettiği ücret
+        uint256 deliveryTime; // Unix Timestamp (Teslimat Bitiş Süresi)
+        string contactInfo; // Şifrelenmiş veya düz metin iletişim bilgisi
+        bool isAccepted;
     }
 
-    // ============================================================
-    //                    EXTERNAL FUNCTIONS
-    // ============================================================
+    // --- State Variables ---
+    uint256 public nextProposalId;
+    mapping(uint256 => Proposal) public proposals;
+    
+    // bountyId => o ilana verilen tekliflerin ID'lerinin listesi
+    mapping(uint256 => uint256[]) public bountyProposals;
+    
+    // bountyId => o ilanda kabul edilen proposalId (0 ise henüz kabul edilen yok)
+    mapping(uint256 => uint256) public acceptedProposals;
 
-    /// @notice Freelancer çözüm gönderir (ucuz gas!)
-    /// @param _bountyId Hedef bounty ID
-    /// @param _solutionURI Çözümün IPFS/URL adresi
-    function submitSolution(
+    // --- Events ---
+    event ProposalSubmitted(
+        uint256 indexed proposalId,
+        uint256 indexed bountyId,
+        address indexed developer,
+        uint256 requestedAmount
+    );
+    event ProposalAccepted(
+        uint256 indexed proposalId,
+        uint256 indexed bountyId,
+        address indexed employer
+    );
+
+    // --- Errors ---
+    error InvalidAmount();
+    error ProposalNotFound();
+    error BountyAlreadyHasAcceptedProposal();
+    error Unauthorized(); // Normalde sadece o Bounty'nin işvereni (employer) onaylayabilir
+
+    // --- Constructor ---
+    constructor() {
+        nextProposalId = 1;
+    }
+
+    // --- External Functions ---
+
+    /**
+     * @dev Geliştirici, C-Chain'de açılmış bir ilana (bountyId) başvurur.
+     */
+    function submitProposal(
         uint256 _bountyId,
-        string calldata _solutionURI
-    ) external {
-        BountyData storage bounty = bounties[_bountyId];
-        if (bounty.creator == address(0)) revert BountyNotFound();
-        if (bounty.status != BountyStatus.Open) revert BountyNotOpen();
-        if (block.timestamp > bounty.deadline) revert DeadlinePassed();
+        uint256 _requestedAmount,
+        uint256 _deliveryTime,
+        string memory _contactInfo
+    ) external nonReentrant {
+        if (_requestedAmount == 0) revert InvalidAmount();
+        
+        // MVP Notu: Geliştiricinin aynı ilana birden fazla teklif vermesi şimdilik engellenmedi.
 
-        uint256 submissionId = nextSubmissionId++;
+        uint256 currentProposalId = nextProposalId;
 
-        Submission memory sub = Submission({
-            submissionId: submissionId,
+        proposals[currentProposalId] = Proposal({
+            proposalId: currentProposalId,
             bountyId: _bountyId,
-            submitter: msg.sender,
-            solutionURI: _solutionURI,
-            submittedAt: block.timestamp,
-            approved: false
+            developer: msg.sender,
+            requestedAmount: _requestedAmount,
+            deliveryTime: _deliveryTime,
+            contactInfo: _contactInfo,
+            isAccepted: false
         });
 
-        submissions[submissionId] = sub;
-        bountySubmissions[_bountyId].push(submissionId);
+        bountyProposals[_bountyId].push(currentProposalId);
+        nextProposalId++;
 
-        emit SolutionSubmitted(submissionId, _bountyId, msg.sender, _solutionURI);
+        emit ProposalSubmitted(currentProposalId, _bountyId, msg.sender, _requestedAmount);
     }
 
-    /// @notice İş veren submission'ı onaylar → C-Chain'e ödeme talimatı gönderilir
-    /// @param _submissionId Onaylanacak submission ID
-    function approveSolution(uint256 _submissionId) external {
-        Submission storage sub = submissions[_submissionId];
-        if (sub.submitter == address(0)) revert SubmissionNotFound();
-        if (sub.approved) revert AlreadyApproved();
+    /**
+     * @dev İşveren, gelen tekliflerden birini kabul eder. (Sözleşme mühürlenir)
+     * @param _proposalId Kabul edilecek teklifin ID'si.
+     * @param _mockEmployer MVP simülasyon amacıyla: Sender'ın işveren olup olmadığını doğrulamamız gerek. 
+     * App-Chain, C-Chain'deki işveren bilgisini senkronize bilmeyebilir. 
+     * Gerçek senaryoda bu işlem ya Teleporter kanalıyla çift yönlü doğrulanır, ya da Oracle kullanılır.
+     * Şimdilik yetki kontrolünü basit tutuyoruz.
+     */
+    function acceptProposal(uint256 _proposalId, address _mockEmployer) external nonReentrant {
+        Proposal storage prop = proposals[_proposalId];
+        if (prop.developer == address(0)) revert ProposalNotFound();
+        
+        uint256 bountyId = prop.bountyId;
+        if (acceptedProposals[bountyId] != 0) revert BountyAlreadyHasAcceptedProposal();
+        
+        // Mock yetki kontrolü
+        if (msg.sender != _mockEmployer) revert Unauthorized();
 
-        BountyData storage bounty = bounties[sub.bountyId];
-        if (bounty.creator != msg.sender) revert NotBountyCreator();
+        prop.isAccepted = true;
+        acceptedProposals[bountyId] = _proposalId;
 
-        sub.approved = true;
-        bounty.status = BountyStatus.Completed;
-
-        emit SolutionApproved(_submissionId, sub.bountyId, sub.submitter);
-
-        // C-Chain'e ödeme talimatı gönder
-        CrossChainMessage memory ccMsg = CrossChainMessage({
-            msgType: MessageType.APPROVE_SOLUTION,
-            bountyId: sub.bountyId,
-            data: abi.encode(sub.submitter) // Ödeme alacak adres
-        });
-
-        teleporterMessenger.sendCrossChainMessage(
-            TeleporterMessageInput({
-                destinationBlockchainID: cChainBlockchainID,
-                destinationAddress: bountyManagerAddress,
-                feeInfo: TeleporterFeeInfo({
-                    feeTokenAddress: address(0),
-                    amount: 0
-                }),
-                requiredGasLimit: 400_000,
-                allowedRelayerAddresses: new address[](0),
-                message: abi.encode(ccMsg)
-            })
-        );
+        emit ProposalAccepted(_proposalId, bountyId, msg.sender);
     }
 
-    /// @notice Dispute aç (hem creator hem submitter açabilir)
-    /// @param _bountyId Dispute açılacak bounty
-    function openDispute(uint256 _bountyId) external {
-        BountyData storage bounty = bounties[_bountyId];
-        if (bounty.creator == address(0)) revert BountyNotFound();
-
-        bounty.status = BountyStatus.Disputed;
-        emit DisputeOpened(_bountyId, msg.sender);
-
-        // C-Chain'e dispute bildir
-        CrossChainMessage memory ccMsg = CrossChainMessage({
-            msgType: MessageType.DISPUTE_OPENED,
-            bountyId: _bountyId,
-            data: abi.encode(msg.sender)
-        });
-
-        teleporterMessenger.sendCrossChainMessage(
-            TeleporterMessageInput({
-                destinationBlockchainID: cChainBlockchainID,
-                destinationAddress: bountyManagerAddress,
-                feeInfo: TeleporterFeeInfo({
-                    feeTokenAddress: address(0),
-                    amount: 0
-                }),
-                requiredGasLimit: 300_000,
-                allowedRelayerAddresses: new address[](0),
-                message: abi.encode(ccMsg)
-            })
-        );
-    }
-
-    // ============================================================
-    //                   TELEPORTER RECEIVER
-    // ============================================================
-
-    /// @notice C-Chain'den gelen mesajları işle (yeni bounty, iptal vs.)
-    function receiveTeleporterMessage(
-        bytes32 sourceBlockchainID,
-        address originSenderAddress,
-        bytes calldata message
-    ) external override {
-        if (msg.sender != address(teleporterMessenger)) revert InvalidCaller();
-        if (sourceBlockchainID != cChainBlockchainID) revert InvalidSourceChain();
-        if (originSenderAddress != bountyManagerAddress) revert InvalidSender();
-
-        CrossChainMessage memory ccMsg = abi.decode(message, (CrossChainMessage));
-
-        if (ccMsg.msgType == MessageType.CREATE_BOUNTY) {
-            _handleNewBounty(ccMsg.data);
-        } else if (ccMsg.msgType == MessageType.CANCEL_BOUNTY) {
-            _handleCancellation(ccMsg.bountyId);
-        }
-    }
-
-    // ============================================================
-    //                   INTERNAL FUNCTIONS
-    // ============================================================
-
-    /// @dev C-Chain'den gelen yeni bounty'yi kaydet
-    function _handleNewBounty(bytes memory _data) internal {
-        BountyData memory bounty = abi.decode(_data, (BountyData));
-        bounties[bounty.bountyId] = bounty;
-
-        emit BountyReceived(
-            bounty.bountyId,
-            bounty.title,
-            bounty.reward,
-            bounty.deadline
-        );
-    }
-
-    /// @dev Bounty iptalini işle
-    function _handleCancellation(uint256 _bountyId) internal {
-        BountyData storage bounty = bounties[_bountyId];
-        bounty.status = BountyStatus.Cancelled;
-        emit BountyCancelledOnAppChain(_bountyId);
-    }
-
-    // ============================================================
-    //                     VIEW FUNCTIONS
-    // ============================================================
-
-    /// @notice Bounty bilgilerini getir
-    function getBounty(uint256 _bountyId) external view returns (BountyData memory) {
-        return bounties[_bountyId];
-    }
-
-    /// @notice Bounty'ye ait submission'ları getir
-    function getSubmissionIds(uint256 _bountyId) external view returns (uint256[] memory) {
-        return bountySubmissions[_bountyId];
-    }
-
-    /// @notice Submission bilgilerini getir
-    function getSubmission(uint256 _submissionId) external view returns (Submission memory) {
-        return submissions[_submissionId];
-    }
-
-    /// @notice Bir bounty'nin toplam submission sayısı
-    function getSubmissionCount(uint256 _bountyId) external view returns (uint256) {
-        return bountySubmissions[_bountyId].length;
-    }
+    // İleride eklenecekler:
+    // - completeWork: Geliştirici işi teslim eder.
+    // - approveWorkAndTriggerPayment: İşveren onaylar ve Teleporter mesajı oluşturulup C-Chain'e yollanır.
 }

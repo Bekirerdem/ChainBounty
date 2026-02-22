@@ -1,260 +1,145 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
-import "@teleporter/ITeleporterMessenger.sol";
-import "@teleporter/ITeleporterReceiver.sol";
-import "../interfaces/IBountyTypes.sol";
+import {
+    ReentrancyGuard
+} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {ITeleporterReceiver} from "../interfaces/ITeleporter.sol";
 
-/// @title BountyManager
-/// @notice C-Chain kontratı — Bounty oluşturma, AVAX escrow, ödeme yönetimi
-/// @dev ICM/Teleporter ile App-Chain'deki BountyExecutor'a mesaj gönderir/alır
-contract BountyManager is ITeleporterReceiver, IBountyTypes {
-    // ============================================================
-    //                      STATE VARIABLES
-    // ============================================================
+/**
+ * @title BountyManager
+ * @dev C-Chain üzerinde çalışan, işverenlerin ilan açıp AVAX kilitlediği ana kontrat (Escrow).
+ */
+contract BountyManager is ReentrancyGuard, ITeleporterReceiver {
+    // --- Structs ---
+    struct Bounty {
+        uint256 bountyId;
+        address employer;
+        uint256 budget;
+        string ipfsDocHash; // Görev detaylarını içeren dosyanın hash'i
+        bool isActive;
+        bool isCompleted;
+    }
 
-    /// @notice TeleporterMessenger kontratı (tüm chain'lerde aynı adres)
-    ITeleporterMessenger public immutable teleporterMessenger;
-
-    /// @notice Hedef App-Chain'in blockchain ID'si (bytes32)
-    bytes32 public immutable appChainBlockchainID;
-
-    /// @notice App-Chain'deki BountyExecutor kontrat adresi
-    address public immutable bountyExecutorAddress;
-
-    /// @notice Bounty counter
+    // --- State Variables ---
+    address public owner;
     uint256 public nextBountyId;
+    mapping(uint256 => Bounty) public bounties;
 
-    /// @notice Bounty ID -> BountyData mapping
-    mapping(uint256 => BountyData) public bounties;
+    // Teleporter Config
+    address public teleporterMessenger;
+    address public allowedAppChainExecutor;
+    bytes32 public appChainId;
 
-    /// @notice Bounty ID -> escrowed amount
-    mapping(uint256 => uint256) public escrowedAmounts;
-
-    // ============================================================
-    //                         EVENTS
-    // ============================================================
-
+    // --- Events ---
     event BountyCreated(
         uint256 indexed bountyId,
-        address indexed creator,
-        string title,
-        uint256 reward,
-        uint256 deadline
+        address indexed employer,
+        uint256 budget,
+        string ipfsDocHash
     );
-
-    event BountySentCrossChain(
-        uint256 indexed bountyId,
-        bytes32 indexed messageId
-    );
-
-    event PaymentReleased(
-        uint256 indexed bountyId,
-        address indexed recipient,
-        uint256 amount
-    );
-
+    event BountyCompleted(uint256 indexed bountyId, address indexed developer);
     event BountyCancelled(uint256 indexed bountyId);
+    event ExecutorSet(address indexed executor);
 
-    event DisputeReceived(uint256 indexed bountyId);
+    // --- Modifiers ---
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert Unauthorized();
+        _;
+    }
 
-    // ============================================================
-    //                         ERRORS
-    // ============================================================
-
-    error InvalidCaller();
-    error InvalidSourceChain();
-    error InvalidSender();
+    // --- Errors ---
+    error InvalidBudget();
     error BountyNotFound();
-    error BountyNotOpen();
-    error InsufficientReward();
-    error DeadlinePassed();
-    error DeadlineNotPassed();
-    error NotBountyCreator();
+    error BountyNotActive();
+    error Unauthorized();
 
-    // ============================================================
-    //                       CONSTRUCTOR
-    // ============================================================
-
-    constructor(
-        address _teleporterMessenger,
-        bytes32 _appChainBlockchainID,
-        address _bountyExecutorAddress
-    ) {
-        teleporterMessenger = ITeleporterMessenger(_teleporterMessenger);
-        appChainBlockchainID = _appChainBlockchainID;
-        bountyExecutorAddress = _bountyExecutorAddress;
+    // --- Constructor ---
+    constructor(address _teleporterMessenger, bytes32 _appChainId) {
+        owner = msg.sender;
+        nextBountyId = 1;
+        teleporterMessenger = _teleporterMessenger;
+        appChainId = _appChainId;
     }
 
-    // ============================================================
-    //                    EXTERNAL FUNCTIONS
-    // ============================================================
+    // --- Admin Functions ---
 
-    /// @notice Yeni bounty oluştur ve App-Chain'e gönder
-    /// @param _title Bounty başlığı
-    /// @param _description Bounty açıklaması
-    /// @param _deadline Son teslim tarihi (unix timestamp)
+    /**
+     * @dev Deploy sonrası BountyExecutor adresini set eder. Sadece owner çağırabilir.
+     * @param _executor App-Chain'deki BountyExecutor kontrat adresi.
+     */
+    function setExecutor(address _executor) external onlyOwner {
+        allowedAppChainExecutor = _executor;
+        emit ExecutorSet(_executor);
+    }
+
+    // --- External Functions ---
+
+    /**
+     * @dev İşveren tarafından yeni bir iş ilanı (Bounty) oluşturur ve gönderilen AVAX'ı kilitler.
+     * @param _ipfsDocHash Görev tanımının bulunduğu IPFS hash'i.
+     */
     function createBounty(
-        string calldata _title,
-        string calldata _description,
-        uint256 _deadline
-    ) external payable {
-        if (msg.value == 0) revert InsufficientReward();
-        if (_deadline <= block.timestamp) revert DeadlinePassed();
+        string memory _ipfsDocHash
+    ) external payable nonReentrant {
+        if (msg.value == 0) revert InvalidBudget();
 
-        uint256 bountyId = nextBountyId++;
+        uint256 currentBountyId = nextBountyId;
 
-        // Bounty verisini oluştur
-        BountyData memory bounty = BountyData({
-            bountyId: bountyId,
-            creator: msg.sender,
-            title: _title,
-            description: _description,
-            reward: msg.value,
-            deadline: _deadline,
-            status: BountyStatus.Open
+        bounties[currentBountyId] = Bounty({
+            bountyId: currentBountyId,
+            employer: msg.sender,
+            budget: msg.value,
+            ipfsDocHash: _ipfsDocHash,
+            isActive: true,
+            isCompleted: false
         });
 
-        bounties[bountyId] = bounty;
-        escrowedAmounts[bountyId] = msg.value;
+        nextBountyId++;
 
-        emit BountyCreated(bountyId, msg.sender, _title, msg.value, _deadline);
-
-        // Cross-chain mesaj hazırla
-        CrossChainMessage memory ccMsg = CrossChainMessage({
-            msgType: MessageType.CREATE_BOUNTY,
-            bountyId: bountyId,
-            data: abi.encode(bounty)
-        });
-
-        // Teleporter ile App-Chain'e gönder
-        bytes32 messageId = teleporterMessenger.sendCrossChainMessage(
-            TeleporterMessageInput({
-                destinationBlockchainID: appChainBlockchainID,
-                destinationAddress: bountyExecutorAddress,
-                feeInfo: TeleporterFeeInfo({
-                    feeTokenAddress: address(0),
-                    amount: 0
-                }),
-                requiredGasLimit: 600_000,
-                allowedRelayerAddresses: new address[](0),
-                message: abi.encode(ccMsg)
-            })
-        );
-
-        emit BountySentCrossChain(bountyId, messageId);
-    }
-
-    /// @notice Bounty'yi iptal et (sadece Open durumunda, creator tarafından)
-    /// @param _bountyId İptal edilecek bounty ID
-    function cancelBounty(uint256 _bountyId) external {
-        BountyData storage bounty = bounties[_bountyId];
-        if (bounty.creator == address(0)) revert BountyNotFound();
-        if (bounty.creator != msg.sender) revert NotBountyCreator();
-        if (bounty.status != BountyStatus.Open) revert BountyNotOpen();
-
-        bounty.status = BountyStatus.Cancelled;
-
-        // Escrowed AVAX'i geri ver
-        uint256 amount = escrowedAmounts[_bountyId];
-        escrowedAmounts[_bountyId] = 0;
-
-        (bool success, ) = msg.sender.call{value: amount}("");
-        require(success, "Transfer failed");
-
-        emit BountyCancelled(_bountyId);
-
-        // App-Chain'e iptal bildir
-        CrossChainMessage memory ccMsg = CrossChainMessage({
-            msgType: MessageType.CANCEL_BOUNTY,
-            bountyId: _bountyId,
-            data: ""
-        });
-
-        teleporterMessenger.sendCrossChainMessage(
-            TeleporterMessageInput({
-                destinationBlockchainID: appChainBlockchainID,
-                destinationAddress: bountyExecutorAddress,
-                feeInfo: TeleporterFeeInfo({
-                    feeTokenAddress: address(0),
-                    amount: 0
-                }),
-                requiredGasLimit: 200_000,
-                allowedRelayerAddresses: new address[](0),
-                message: abi.encode(ccMsg)
-            })
+        emit BountyCreated(
+            currentBountyId,
+            msg.sender,
+            msg.value,
+            _ipfsDocHash
         );
     }
 
-    // ============================================================
-    //                   TELEPORTER RECEIVER
-    // ============================================================
-
-    /// @notice App-Chain'den gelen mesajları işle
-    /// @dev Sadece TeleporterMessenger tarafından çağrılabilir
+    /**
+     * @dev Teleporter mesajını alır ve doğrular (receiver).
+     * @param sourceChainID Mesajın geldiği zincir (App-Chain).
+     * @param sourceAddress Mesajı gönderen kontrat adresi (BountyExecutor).
+     * @param messageData Encoded payload (bountyId, developer address).
+     */
     function receiveTeleporterMessage(
-        bytes32 sourceBlockchainID,
-        address originSenderAddress,
-        bytes calldata message
-    ) external override {
-        if (msg.sender != address(teleporterMessenger)) revert InvalidCaller();
-        if (sourceBlockchainID != appChainBlockchainID) revert InvalidSourceChain();
-        if (originSenderAddress != bountyExecutorAddress) revert InvalidSender();
+        bytes32 sourceChainID,
+        address sourceAddress,
+        bytes calldata messageData
+    ) external override nonReentrant {
+        // Mock Güvenlik Kontrolleri
+        if (msg.sender != teleporterMessenger) revert Unauthorized();
+        if (sourceChainID != appChainId) revert Unauthorized();
+        if (sourceAddress != allowedAppChainExecutor) revert Unauthorized();
 
-        CrossChainMessage memory ccMsg = abi.decode(message, (CrossChainMessage));
+        // Veriyi decode et
+        (uint256 bountyId, address developer) = abi.decode(
+            messageData,
+            (uint256, address)
+        );
 
-        if (ccMsg.msgType == MessageType.APPROVE_SOLUTION) {
-            _handleApproval(ccMsg.bountyId, ccMsg.data);
-        } else if (ccMsg.msgType == MessageType.DISPUTE_OPENED) {
-            _handleDispute(ccMsg.bountyId);
-        }
+        Bounty storage b = bounties[bountyId];
+        if (!b.isActive || b.isCompleted) revert BountyNotActive();
+
+        b.isCompleted = true;
+        b.isActive = false;
+
+        uint256 payment = b.budget;
+        b.budget = 0;
+
+        // ETH (AVAX) Transferi
+        (bool success, ) = developer.call{value: payment}("");
+        require(success, "Payment failed");
+
+        emit BountyCompleted(bountyId, developer);
     }
-
-    // ============================================================
-    //                   INTERNAL FUNCTIONS
-    // ============================================================
-
-    /// @dev Onaylanan submission için ödemeyi serbest bırak
-    function _handleApproval(uint256 _bountyId, bytes memory _data) internal {
-        BountyData storage bounty = bounties[_bountyId];
-        if (bounty.creator == address(0)) revert BountyNotFound();
-
-        address recipient = abi.decode(_data, (address));
-
-        bounty.status = BountyStatus.Completed;
-
-        uint256 amount = escrowedAmounts[_bountyId];
-        escrowedAmounts[_bountyId] = 0;
-
-        (bool success, ) = recipient.call{value: amount}("");
-        require(success, "Transfer failed");
-
-        emit PaymentReleased(_bountyId, recipient, amount);
-    }
-
-    /// @dev Dispute bildirimini işle
-    function _handleDispute(uint256 _bountyId) internal {
-        BountyData storage bounty = bounties[_bountyId];
-        if (bounty.creator == address(0)) revert BountyNotFound();
-
-        bounty.status = BountyStatus.Disputed;
-        emit DisputeReceived(_bountyId);
-    }
-
-    // ============================================================
-    //                     VIEW FUNCTIONS
-    // ============================================================
-
-    /// @notice Bounty bilgilerini getir
-    function getBounty(uint256 _bountyId) external view returns (BountyData memory) {
-        return bounties[_bountyId];
-    }
-
-    /// @notice Escrow'daki miktarı getir
-    function getEscrowedAmount(uint256 _bountyId) external view returns (uint256) {
-        return escrowedAmounts[_bountyId];
-    }
-
-    /// @notice receive() — kontrat AVAX alabilmesi için
-    receive() external payable {}
 }
