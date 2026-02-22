@@ -4,7 +4,8 @@ import { use, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
-import { getBountyById, getSubmissionsForBounty, formatAddress, formatDeadline } from "@/lib/mock-data";
+import { getBountyById, getSubmissionsForBounty, formatAddress, formatDeadline, useMockMode } from "@/lib/mock-data";
+import { useSubmitWork } from "@/hooks/useBounty";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -26,6 +27,8 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const [demoLink, setDemoLink] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const { submitWork } = useSubmitWork();
+
     if (!bounty) {
         return (
             <div className="container pt-32 pb-20 min-h-screen flex items-center justify-center">
@@ -46,12 +49,27 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        setIsSubmitModalOpen(false);
-        // In a real app, we would refresh the data
-        alert("Submission received! (Mock)");
+
+        if (useMockMode) {
+            // Simulate API call
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            setIsSubmitting(false);
+            setIsSubmitModalOpen(false);
+            // In a real app, we would refresh the data
+            alert("Submission received! (Mock)");
+        } else {
+            try {
+                // Submit work to the App-Chain executor
+                await submitWork(bountyId, repoLink);
+                setIsSubmitting(false);
+                setIsSubmitModalOpen(false);
+                alert("Submission sent to ChainBounty App-Chain!");
+            } catch (error) {
+                console.error("Submission Error", error);
+                setIsSubmitting(false);
+                alert("Submission failed. Check console.");
+            }
+        }
     };
 
     return (
@@ -242,7 +260,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                     placeholder="https://github.com/..."
                                     value={repoLink}
                                     onChange={(e) => setRepoLink(e.target.value)}
-                                    className="w-full bg-black/40 border border-white/10 p-3 text-white focus:border-avax-red focus:outline-none transition-colors font-outfit"
+                                    className="form-input"
                                 />
                             </div>
                             
@@ -255,7 +273,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                     placeholder="https://..."
                                     value={demoLink}
                                     onChange={(e) => setDemoLink(e.target.value)}
-                                    className="w-full bg-black/40 border border-white/10 p-3 text-white focus:border-avax-red focus:outline-none transition-colors font-outfit"
+                                    className="form-input"
                                 />
                             </div>
 

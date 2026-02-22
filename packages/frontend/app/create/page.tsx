@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useCreateBounty } from "@/hooks/useBounty";
+import { useMockMode } from "@/lib/mock-data";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -43,19 +45,36 @@ export default function CreateBountyPage() {
         return Object.keys(newErrors).length === 0;
     };
 
+    const { createTask } = useCreateBounty();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
 
         setSubmitting(true);
 
-        // Mock submission delay
-        await new Promise((r) => setTimeout(r, 1500));
-
-        setSuccess(true);
-        setTimeout(() => {
-            router.push("/bounties");
-        }, 2000);
+        if (useMockMode) {
+            // Mock submission delay
+            await new Promise((r) => setTimeout(r, 1500));
+            setSuccess(true);
+            setTimeout(() => {
+                router.push("/bounties");
+            }, 2000);
+        } else {
+            try {
+                // In a real app we might store JSON in IPFS. For hackathon, we combine title and description.
+                await createTask(`${form.title} | ${form.description}`, form.reward);
+                // Note: createTask is async but in wagmi v2 writeContract doesn't wait for receipt by default. 
+                // We'll just show success immediately for MVP simplicity.
+                setSuccess(true);
+                setTimeout(() => {
+                    router.push("/bounties");
+                }, 2000);
+            } catch (err) {
+                console.error("Contract Error:", err);
+                setSubmitting(false);
+            }
+        }
     };
 
     const updateField = (field: string, value: string) => {
