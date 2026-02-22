@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(forge build:*)",
+      "Bash(forge clean:*)",
+      "Bash(xxd:*)",
+      "Bash(cd /c/Users/l3eki/OneDrive/Masaüstü/ChainBounty/packages/contracts && forge test -vvv 2>&)",
+      "WebSearch",
+      "WebFetch(domain:build.avax.network)",
+      "WebFetch(domain:subnets.avax.network)",
+      "WebFetch(domain:chainlist.org)",
+      "Bash(curl:*)",
+      "Bash(cd /c/Users/l3eki/OneDrive/Masaüstü/ChainBounty/packages/contracts && forge test -vvv 2>&1)",
+      "Bash(cd:*)"
+    ]
+  }
+}

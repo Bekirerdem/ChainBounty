@@ -28,5 +28,8 @@
     "icm",
     "web3"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  }
 }
