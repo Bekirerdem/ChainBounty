@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useDemo } from "@/contexts/DemoContext";
 
 const navLinks = [
     { href: "/", label: "Home" },
@@ -14,6 +15,7 @@ const navLinks = [
 export default function Navbar() {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { isDemoMode, toggleDemoMode } = useDemo();
 
     return (
         <nav className="navbar">
@@ -96,80 +98,21 @@ export default function Navbar() {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    {/* Wallet Connect — RainbowKit */}
-                    <ConnectButton.Custom>
-                        {({
-                            account,
-                            chain,
-                            openAccountModal,
-                            openChainModal,
-                            openConnectModal,
-                            mounted,
-                        }) => {
-                            const ready = mounted;
-                            const connected = ready && account && chain;
+                    {/* Demo Mode Toggle */}
+                    <button
+                        onClick={toggleDemoMode}
+                        title={isDemoMode ? "Disable Demo Mode to use real smart contracts" : "Enable Demo Mode to navigate with mock data"}
+                        className={`hidden md:flex px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                            isDemoMode 
+                                ? "bg-avax-red/10 text-avax-red border-avax-red/30 shadow-[0_0_8px_rgba(232,65,66,0.2)]" 
+                                : "bg-bg-elevated text-text-muted border-border-primary hover:text-white"
+                        }`}
+                    >
+                        {isDemoMode ? "Mock Data" : "Live Net"}
+                    </button>
 
-                            return (
-                                <div
-                                    {...(!ready && {
-                                        "aria-hidden": true,
-                                        style: { opacity: 0, pointerEvents: "none", userSelect: "none" },
-                                    })}
-                                >
-                                    {!connected ? (
-                                        <button
-                                            onClick={openConnectModal}
-                                            className="btn-avax btn-sm"
-                                        >
-                                            Connect
-                                        </button>
-                                    ) : chain.unsupported ? (
-                                        <button
-                                            onClick={openChainModal}
-                                            className="btn-sm"
-                                            style={{
-                                                background: "rgba(239,68,68,0.15)",
-                                                border: "1px solid #ef4444",
-                                                color: "#ef4444",
-                                                borderRadius: "6px",
-                                                padding: "6px 12px",
-                                                fontSize: "0.75rem",
-                                                fontWeight: 600,
-                                                cursor: "pointer",
-                                                letterSpacing: "0.04em",
-                                            }}
-                                        >
-                                            Wrong Network
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={openAccountModal}
-                                            className="btn-ghost btn-sm"
-                                            style={{
-                                                borderColor: "var(--border-avax)",
-                                                color: "var(--avax-red)",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "6px",
-                                            }}
-                                        >
-                                            <span
-                                                style={{
-                                                    width: "6px",
-                                                    height: "6px",
-                                                    borderRadius: "50%",
-                                                    background: "var(--status-open)",
-                                                    boxShadow: "0 0 8px var(--status-open)",
-                                                    flexShrink: 0,
-                                                }}
-                                            />
-                                            {account.displayName}
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        }}
-                    </ConnectButton.Custom>
+                    {/* Wallet Connect — RainbowKit */}
+                    <ConnectButton />
 
                     {/* Mobile Menu Toggle */}
                     <button
@@ -221,6 +164,16 @@ export default function Navbar() {
                             {link.label}
                         </Link>
                     ))}
+                    <button
+                        onClick={() => { toggleDemoMode(); setMobileOpen(false); }}
+                        className={`mt-4 px-4 py-3 w-full text-center rounded-none text-sm font-bold uppercase tracking-wider border transition-all ${
+                            isDemoMode 
+                                ? "bg-avax-red/10 text-avax-red border-avax-red/30" 
+                                : "bg-bg-elevated text-text-muted border-border-primary hover:text-white"
+                        }`}
+                    >
+                        {isDemoMode ? "🟢 Mock Data" : "🔴 Live Net"}
+                    </button>
                 </div>
             )}
         </nav>
