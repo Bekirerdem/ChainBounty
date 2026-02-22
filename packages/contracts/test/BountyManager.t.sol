@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../src/c-chain/BountyManager.sol";
@@ -20,21 +20,18 @@ contract BountyManagerTest is Test {
     address public mockExecutor = makeAddr("executor");
 
     function setUp() public {
-        bountyManager = new BountyManager(
-            mockTeleporter,
-            appChainID,
-            mockExecutor
-        );
+        bountyManager = new BountyManager(mockTeleporter, appChainID);
+        bountyManager.setExecutor(mockExecutor);
 
         // Creator'a AVAX ver
         vm.deal(creator, 100 ether);
     }
 
     function test_InitialState() public view {
-        assertEq(bountyManager.nextBountyId(), 0);
+        assertEq(bountyManager.nextBountyId(), 1);
         assertEq(address(bountyManager.teleporterMessenger()), mockTeleporter);
-        assertEq(bountyManager.appChainBlockchainID(), appChainID);
-        assertEq(bountyManager.bountyExecutorAddress(), mockExecutor);
+        assertEq(bountyManager.appChainId(), appChainID);
+        assertEq(bountyManager.allowedAppChainExecutor(), mockExecutor);
     }
 
     // TODO: Hafta 2'de implement edilecek testler:

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../src/app-chain/BountyExecutor.sol";
@@ -20,18 +20,11 @@ contract BountyExecutorTest is Test {
     address public mockManager = makeAddr("manager");
 
     function setUp() public {
-        bountyExecutor = new BountyExecutor(
-            mockTeleporter,
-            cChainID,
-            mockManager
-        );
+        bountyExecutor = new BountyExecutor();
     }
 
     function test_InitialState() public view {
-        assertEq(bountyExecutor.nextSubmissionId(), 0);
-        assertEq(address(bountyExecutor.teleporterMessenger()), mockTeleporter);
-        assertEq(bountyExecutor.cChainBlockchainID(), cChainID);
-        assertEq(bountyExecutor.bountyManagerAddress(), mockManager);
+        assertEq(bountyExecutor.nextProposalId(), 1);
     }
 
     // TODO: Hafta 2'de implement edilecek testler:

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import "../src/app-chain/BountyExecutor.sol";
@@ -11,15 +11,13 @@ contract DeployBountyExecutor is Script {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         bytes32 cChainBlockchainID = vm.envBytes32("C_CHAIN_BLOCKCHAIN_ID");
         address bountyManagerAddress = vm.envAddress("BOUNTY_MANAGER_ADDRESS");
-        address teleporterMessenger = vm.envAddress("TELEPORTER_MESSENGER_ADDRESS");
+        address teleporterMessenger = vm.envAddress(
+            "TELEPORTER_MESSENGER_ADDRESS"
+        );
 
         vm.startBroadcast(deployerKey);
 
-        BountyExecutor bountyExecutor = new BountyExecutor(
-            teleporterMessenger,
-            cChainBlockchainID,
-            bountyManagerAddress
-        );
+        BountyExecutor bountyExecutor = new BountyExecutor();
 
         vm.stopBroadcast();
 
