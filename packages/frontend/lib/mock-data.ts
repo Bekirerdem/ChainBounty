@@ -4,7 +4,7 @@
 // Blockchain bağlandığında useMockMode = false yapılacak.
 // ============================================================
 
-export const useMockMode = true;
+export const useMockMode = false;
 
 // ============================================================
 //                      TYPES
