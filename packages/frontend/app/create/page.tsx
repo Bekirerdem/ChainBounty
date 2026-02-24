@@ -118,7 +118,7 @@ export default function CreateBountyPage() {
                 {/* Header */}
                 <motion.div custom={0} variants={fadeUp} className="mb-10 text-center md:text-left">
                     <h1 className="text-4xl md:text-5xl font-bold mb-3 font-outfit tracking-tight">
-                        Create <span className="text-avax-red">Bounty</span>
+                        Create <span className="gradient-text">Bounty</span>
                     </h1>
                     <p className="text-xl text-text-secondary font-light">
                         Post a task, lock AVAX in escrow, and recruit talent.
@@ -127,12 +127,12 @@ export default function CreateBountyPage() {
 
                 {/* Form */}
                 <motion.form custom={1} variants={fadeUp} onSubmit={handleSubmit}>
-                    <div className="glass-card p-8 md:p-10 border-t border-white/10 relative overflow-hidden group">
+                    <div className="glass-card p-8 md:p-10 border-t border-white/10 relative overflow-hidden group space-y-8">
                         <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-avax-red via-transparent to-transparent opacity-50" />
                         
                         {/* Title */}
-                        <div className="mb-8">
-                            <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
+                        <div className="flex flex-col space-y-2">
+                            <label className="block text-sm font-semibold text-text-primary uppercase tracking-wide">
                                 Bounty Title
                             </label>
                             <input
@@ -149,8 +149,8 @@ export default function CreateBountyPage() {
                         </div>
 
                         {/* Description */}
-                        <div className="mb-8">
-                            <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
+                        <div className="flex flex-col space-y-2">
+                            <label className="block text-sm font-semibold text-text-primary uppercase tracking-wide">
                                 Description
                             </label>
                             <textarea
@@ -163,10 +163,10 @@ export default function CreateBountyPage() {
                         </div>
 
                         {/* Reward + Deadline Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Reward */}
-                            <div>
-                                <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
+                            <div className="flex flex-col space-y-2">
+                                <label className="block text-sm font-semibold text-text-primary uppercase tracking-wide">
                                     Reward (AVAX)
                                 </label>
                                 <div className="relative">
@@ -190,8 +190,8 @@ export default function CreateBountyPage() {
                             </div>
 
                             {/* Deadline */}
-                            <div>
-                                <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
+                            <div className="flex flex-col space-y-2">
+                                <label className="block text-sm font-semibold text-text-primary uppercase tracking-wide">
                                     Deadline
                                 </label>
                                 <input
@@ -205,8 +205,8 @@ export default function CreateBountyPage() {
                         </div>
 
                         {/* Tags */}
-                        <div className="mb-10">
-                            <label className="block text-sm font-semibold text-text-primary mb-2 uppercase tracking-wide">
+                        <div className="flex flex-col space-y-2">
+                            <label className="block text-sm font-semibold text-text-primary uppercase tracking-wide">
                                 Tags (optional)
                             </label>
                             <input
@@ -219,7 +219,7 @@ export default function CreateBountyPage() {
                         </div>
 
                         {/* Info Card */}
-                        <div className="bg-avax-red/5 border border-avax-red/10 rounded-none p-5 mb-8 text-sm text-text-secondary leading-relaxed flex items-start gap-3">
+                        <div className="bg-avax-red/5 border border-avax-red/10 rounded-none p-5 text-sm text-text-secondary leading-relaxed flex items-start gap-3">
                             <span className="text-lg">⚡</span>
                             <div>
                                 <strong className="text-avax-red font-semibold block mb-1">How it works</strong>

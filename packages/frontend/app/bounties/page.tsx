@@ -81,7 +81,7 @@ export default function BountiesPage() {
                     variants={fadeUp}
                     className="text-4xl md:text-5xl font-bold mb-4 font-outfit tracking-tight"
                 >
-                    Explore <span className="text-avax-red">Bounties</span>
+                    Explore <span className="gradient-text">Bounties</span>
                 </motion.h1>
                 <motion.p
                     custom={1}
