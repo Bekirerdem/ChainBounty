@@ -245,8 +245,8 @@ export function useBountySubmissions(bountyId: number) {
                         bountyId: Number(bId),
                         submitter: developer,
                         description: "Hackathon Submission", 
-                        repoLink: contactInfo.includes(" | ") ? contactInfo.split(" | ")[0] : (contactInfo.startsWith("http") ?       contactInfo : ""),
-                        demoLink: contactInfo.includes(" | ") ? contactInfo.split(" | ")[1] : "", 
+                        repoLink: contactInfo.includes(" | ") ? contactInfo.split(" | ")[0].trim() : contactInfo.trim(),
+                        demoLink: contactInfo.includes(" | ") ? (contactInfo.split(" | ")[1] ?? "").trim() : "",
                         submittedAt: Math.floor(Date.now() / 1000) - 86400, // mock time
                         status: isAccepted ? "Accepted" : "Pending",
                     });

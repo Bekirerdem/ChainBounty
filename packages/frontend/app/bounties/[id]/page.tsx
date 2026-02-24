@@ -185,7 +185,8 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                 await submitWork(bountyId, combinedLink, amount);
                 setIsSubmitting(false);
                 setIsSubmitModalOpen(false);
-                refetchSubmissions();
+                // App-Chain tx confirmation takes a few seconds — wait before refetch
+                setTimeout(() => refetchSubmissions(), 4000);
             } catch (error) {
                 console.error("Submission Error", error);
                 setIsSubmitting(false);
