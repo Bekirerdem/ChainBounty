@@ -91,17 +91,28 @@ export default function BountyCard({ bounty }: BountyCardProps) {
                     }}
                 >
                     {/* Reward */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "1.1rem" }}>🔺</span>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
                         <span
                             style={{
                                 fontFamily: "var(--font-heading)",
-                                fontSize: "1.05rem",
+                                fontSize: "1.1rem",
                                 fontWeight: 800,
-                                color: "var(--avax-red)",
+                                letterSpacing: "-0.01em",
+                                color: "var(--text-primary)",
                             }}
                         >
-                            {bounty.reward} AVAX
+                            {bounty.reward}
+                        </span>
+                        <span
+                            className="gradient-text"
+                            style={{
+                                fontFamily: "var(--font-heading)",
+                                fontSize: "0.85rem",
+                                fontWeight: 800,
+                                letterSpacing: "0.04em",
+                            }}
+                        >
+                            AVAX
                         </span>
                     </div>
 
