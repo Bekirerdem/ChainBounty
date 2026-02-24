@@ -114,7 +114,6 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     }
 
     const amount = bounty.reward;
-    const currency = "AVAX";
 
     const isEmployer = address && bounty && address.toLowerCase() === bounty.creator.toLowerCase();
     const acceptedSubmission = submissions.find(sub => sub.status === "Accepted");
