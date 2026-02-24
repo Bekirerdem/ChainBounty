@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import { formatAddress, formatDeadline, useMockMode, BountyStatus } from "@/lib/mock-data";
-import { useSubmitWork, useTaskDetails, useBountySubmissions, useAcceptProposal, useApprovePayment, useForceSettle, useCancelBounty } from "@/hooks/useBounty";
+import { useSubmitWork, useTaskDetails, useBountySubmissions, useAcceptProposal, useApprovePayment, useForceSettle, useCancelBounty, useClaimEmployer, useBountyEmployer } from "@/hooks/useBounty";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -44,6 +44,8 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const { approvePayment, isPending: isApproving } = useApprovePayment();
     const { forceSettle, isPending: isForceSettling } = useForceSettle();
     const { cancelBounty, isPending: isCancelling } = useCancelBounty();
+    const { claimEmployer, isPending: isClaiming } = useClaimEmployer();
+    const { employerOnAppChain, refetch: refetchEmployer } = useBountyEmployer(bountyId);
 
     // Parse the task details from the contract tuple
     let bounty = null;
@@ -154,6 +156,16 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
             }
         } catch (error) {
             console.error("Force Settle Error:", error);
+        }
+    };
+
+    const handleClaimEmployer = async () => {
+        if (!address) return;
+        try {
+            await claimEmployer(bountyId);
+            refetchEmployer();
+        } catch (error) {
+            console.error("Claim employer error:", error);
         }
     };
 
@@ -697,6 +709,16 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                             )
                                         ) : (
                                             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                                                {employerOnAppChain === "0x0000000000000000000000000000000000000000" ? (
+                                                    <button
+                                                        onClick={handleClaimEmployer}
+                                                        disabled={isClaiming}
+                                                        className="btn-avax"
+                                                        style={{ width: "100%", justifyContent: "center" }}
+                                                    >
+                                                        {isClaiming ? "Registering..." : "Register on App-Chain →"}
+                                                    </button>
+                                                ) : (
                                                 <div
                                                     style={{
                                                         padding: "0.85rem",
@@ -710,6 +732,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                 >
                                                     Review submissions below to accept one
                                                 </div>
+                                                )}
                                                 <button
                                                     onClick={handleCancelBounty}
                                                     disabled={isCancelling}

@@ -150,8 +150,21 @@ contract BountyExecutor is ReentrancyGuard, ITeleporterReceiver {
     // ============================================================
 
     /**
+     * @dev Relayer ICM mesajını iletmeden önce işveren kendini manuel olarak kaydeder.
+     * ICM mesajı daha sonra gelirse üzerine yazar (güvenli: Teleporter her zaman kazanır).
+     * İlk çağıran employer olur — sadece bir kez kaydedilebilir.
+     *
+     * @param _bountyId Kaydedilecek bounty ID
+     */
+    function claimEmployer(uint256 _bountyId) external {
+        if (bountyEmployers[_bountyId] != address(0)) revert Unauthorized();
+        bountyEmployers[_bountyId] = msg.sender;
+        emit BountyRegistered(_bountyId, msg.sender);
+    }
+
+    /**
      * @dev Geliştirici, C-Chain'de açılmış bir ilana başvurur.
-     * Bounty'nin bu zincirde kayıtlı olması (CREATE_BOUNTY mesajı gelmiş) şart.
+     * Bounty'nin bu zincirde kayıtlı olması (CREATE_BOUNTY ICM mesajı gelmiş) şart.
      *
      * @param _bountyId C-Chain'deki bounty ID
      * @param _requestedAmount Talep edilen ücret (wei)

@@ -167,6 +167,27 @@ export function useSubmitWork() {
 }
 
 /**
+ * Reads whether an employer is registered on App-Chain for a bounty.
+ * Returns address(0) if not registered yet.
+ */
+export function useBountyEmployer(bountyId: number) {
+  const { data: employer, isLoading, refetch } = useReadContract({
+    address: BOUNTY_EXECUTOR_ADDRESS,
+    abi: BOUNTY_EXECUTOR_ABI,
+    functionName: 'bountyEmployers',
+    args: [BigInt(bountyId)],
+    chainId: bountyAppChain.id,
+    query: { enabled: bountyId > 0 },
+  });
+
+  return {
+    employerOnAppChain: (employer as string) ?? "0x0000000000000000000000000000000000000000",
+    isLoading,
+    refetch,
+  };
+}
+
+/**
  * Reads whether a task is resolved on the App-Chain
  */
 export function useIsTaskResolved(taskId: number) {
@@ -332,6 +353,38 @@ export function useApprovePayment() {
     isSuccess,
     error,
   };
+}
+
+/**
+ * Employer registers themselves on App-Chain for a specific bounty.
+ * Needed when ICM relayer hasn't delivered the CREATE_BOUNTY message yet.
+ */
+export function useClaimEmployer() {
+  const { address } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const { chain } = useAccount();
+
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const claimEmployer = async (bountyId: number) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    if (chain?.id !== bountyAppChain.id) {
+      if (switchChainAsync) await switchChainAsync({ chainId: bountyAppChain.id });
+    }
+
+    const txHash = await writeContractAsync({
+      address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
+      abi: BOUNTY_EXECUTOR_ABI,
+      functionName: "claimEmployer",
+      args: [BigInt(bountyId)],
+      chainId: bountyAppChain.id,
+    });
+
+    return txHash;
+  };
+
+  return { claimEmployer, isPending, isSuccess, error };
 }
 
 /**
