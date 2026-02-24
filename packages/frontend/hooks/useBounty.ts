@@ -1,4 +1,4 @@
-import { useReadContract, useReadContracts, useWriteContract } from 'wagmi';
+import { useReadContract, useReadContracts, useWriteContract, useAccount, useSwitchChain } from 'wagmi';
 import { BOUNTY_MANAGER_ADDRESS, BOUNTY_MANAGER_ABI, BOUNTY_EXECUTOR_ADDRESS, BOUNTY_EXECUTOR_ABI } from '../lib/contracts';
 import { avalancheFuji, bountyAppChain } from '../lib/chains';
 import { parseEther, formatEther } from 'viem';
@@ -139,18 +139,29 @@ export function useAllBounties() {
  * Submits work on the App-Chain towards a task created on the C-Chain
  */
 export function useSubmitWork() {
-  const { writeContract, isPending, isSuccess, isError, error, data: hash } = useWriteContract();
+  const { writeContractAsync, isPending, isSuccess, isError, error, data: hash } = useWriteContract();
+  const { chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
 
-  const submitWork = async (taskId: number, workerResult: string) => {
-    // BountyExecutor.sol expects: submitProposal(uint256 _bountyId, uint256 _requestedAmount, uint256 _deliveryTime, string memory _contactInfo)
-    writeContract({
-      address: BOUNTY_EXECUTOR_ADDRESS,
-      abi: BOUNTY_EXECUTOR_ABI,
-      functionName: 'submitProposal',
-      args: [BigInt(taskId), parseEther("0.1"), BigInt(Math.floor(Date.now() / 1000) + 86400 * 7), workerResult],
-      chainId: bountyAppChain.id,
-    });
-  };
+    const submitWork = async (bountyId: number, repoLink: string, rewardValue: string = "0.1") => {
+        // Enforce chain switch if the user is not on App-Chain
+        if (chain?.id !== bountyAppChain.id) {
+             if (switchChainAsync) {
+                 await switchChainAsync({ chainId: bountyAppChain.id });
+             } else {
+                 throw new Error("Lütfen cüzdanınızdan ChainBounty App-Chain ağına geçiş yapın.");
+             }
+        }
+
+        return await writeContractAsync({
+            address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
+            abi: BOUNTY_EXECUTOR_ABI,
+            functionName: 'submitProposal',
+            // Pass a valid requestedAmount (>0) and deliveryTime (future timestamp)
+            args: [BigInt(bountyId), parseEther(rewardValue), BigInt(Math.floor(Date.now() / 1000) + 86400 * 7), repoLink],
+            chainId: bountyAppChain.id, // Explicitly target App-Chain
+        });
+    };
 
   return { submitWork, isPending, isSuccess, isError, error, hash };
 }
@@ -171,4 +182,193 @@ export function useIsTaskResolved(taskId: number) {
   });
 
   return { isResolved: Boolean(isResolved), isLoading, isError, refetch };
+}
+
+/**
+ * Reads the total number of proposals on the App-Chain
+ */
+export function useProposalCount() {
+    const { data: count, isLoading, isError, refetch } = useReadContract({
+        address: BOUNTY_EXECUTOR_ADDRESS,
+        abi: BOUNTY_EXECUTOR_ABI,
+        functionName: 'nextProposalId',
+        chainId: bountyAppChain.id,
+    });
+    
+    return { proposalCount: count ? Number(count) : 0, isLoading, isError, refetch };
+}
+
+/**
+ * Fetches all submissions/proposals for a specific bounty
+ */
+export function useBountySubmissions(bountyId: number) {
+    const { proposalCount, isLoading: isCountLoading } = useProposalCount();
+
+    const proposalContracts = Array.from({ length: proposalCount }).map((_, i) => ({
+        address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
+        abi: BOUNTY_EXECUTOR_ABI,
+        functionName: 'proposals',
+        args: [BigInt(i)],
+        chainId: bountyAppChain.id,
+    }));
+
+    const { data: results, isLoading: isProposalsLoading, refetch } = useReadContracts({
+        contracts: proposalContracts,
+        query: {
+            enabled: proposalCount > 0,
+        }
+    });
+
+    type SubmissionType = {
+        submissionId: number;
+        bountyId: number;
+        submitter: string;
+        description: string;
+        repoLink: string;
+        demoLink: string;
+        submittedAt: number;
+        status: "Pending" | "Accepted";
+    };
+
+    const submissions: SubmissionType[] = [];
+
+    if (results) {
+        results.forEach((result) => {
+            if (result.status === "success" && result.result) {
+                // ABI format: [proposalId, bountyId, developer, requestedAmount, deliveryTime, contactInfo, isAccepted]
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const [pId, bId, developer, _requestedAmount, _deliveryTime, contactInfo, isAccepted] = result.result as unknown as [bigint, bigint, string, bigint, bigint, string, boolean];
+                
+                if (Number(bId) === bountyId) {
+                    submissions.push({
+                        submissionId: Number(pId),
+                        bountyId: Number(bId),
+                        submitter: developer,
+                        description: "Hackathon Submission", 
+                        repoLink: contactInfo.includes(" | ") ? contactInfo.split(" | ")[0] : (contactInfo.startsWith("http") ?       contactInfo : ""),
+                        demoLink: contactInfo.includes(" | ") ? contactInfo.split(" | ")[1] : "", 
+                        submittedAt: Math.floor(Date.now() / 1000) - 86400, // mock time
+                        status: isAccepted ? "Accepted" : "Pending",
+                    });
+                }
+            }
+        });
+    }
+
+    return {
+        submissions: submissions.reverse(),
+        isLoading: isCountLoading || isProposalsLoading,
+        refetch
+    };
+}
+
+// --- Proposal Management Hooks ---
+
+export function useAcceptProposal() {
+  const { address } = useAccount();
+  
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const acceptProposal = async (proposalId: number, bountyId: number, mockEmployerAddress: string) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    try {
+      console.log(`Accepting proposal ${proposalId} for bounty ${bountyId} as ${mockEmployerAddress}...`);
+      
+      const txHash = await writeContractAsync({
+        address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
+        abi: BOUNTY_EXECUTOR_ABI,
+        functionName: "acceptProposal",
+        args: [BigInt(proposalId), mockEmployerAddress as `0x${string}`],
+        chainId: bountyAppChain.id,
+      });
+      
+      console.log("Accept proposal Tx submitted:", txHash);
+      return txHash;
+    } catch (err) {
+      console.error("Accept proposal failed:", err);
+      throw err;
+    }
+  };
+
+  return {
+    acceptProposal,
+    isPending,
+    isSuccess,
+    error,
+  };
+}
+
+export function useApprovePayment() {
+  const { address } = useAccount();
+  
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const approvePayment = async (bountyId: number, mockEmployerAddress: string) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    try {
+      console.log(`Approving payment (Triggering Teleporter) for bounty ${bountyId} as ${mockEmployerAddress}...`);
+      
+      const txHash = await writeContractAsync({
+        address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
+        abi: BOUNTY_EXECUTOR_ABI,
+        functionName: "approveWorkAndTriggerPayment",
+        args: [BigInt(bountyId), mockEmployerAddress as `0x${string}`],
+        chainId: bountyAppChain.id,
+      });
+      
+      console.log("Approve payment Tx submitted:", txHash);
+      return txHash;
+    } catch (err) {
+      console.error("Approve payment failed:", err);
+      throw err;
+    }
+  };
+
+  return {
+    approvePayment,
+    isPending,
+    isSuccess,
+    error,
+  };
+}
+
+/**
+ * Fallback mechanism for Hackathon if Teleporter fails.
+ * Forces the settlement directly on the C-Chain.
+ */
+export function useForceSettle() {
+  const { address } = useAccount();
+  
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const forceSettle = async (bountyId: number, developerAddress: string) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    try {
+      console.log(`Force settling bounty ${bountyId} for ${developerAddress}...`);
+      
+      const txHash = await writeContractAsync({
+        address: BOUNTY_MANAGER_ADDRESS as `0x${string}`,
+        abi: BOUNTY_MANAGER_ABI,
+        functionName: "forceSettleByEmployer",
+        args: [BigInt(bountyId), developerAddress as `0x${string}`],
+        chainId: avalancheFuji.id, // Must be C-Chain
+      });
+      
+      console.log("Force settle Tx submitted:", txHash);
+      return txHash;
+    } catch (err) {
+      console.error("Force settle failed:", err);
+      throw err;
+    }
+  };
+
+  return {
+    forceSettle,
+    isPending,
+    isSuccess,
+    error,
+  };
 }
