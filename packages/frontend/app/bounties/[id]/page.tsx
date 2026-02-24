@@ -147,10 +147,12 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     };
 
     const handleForceSettle = async () => {
-        const dev = developerAddress || prompt("Developer wallet address:");
-        if (!dev) return;
+        if (!developerAddress) {
+            alert("No accepted proposal found. Please refresh and try again.");
+            return;
+        }
         try {
-            const txHash = await forceSettle(bountyId, dev);
+            const txHash = await forceSettle(bountyId, developerAddress);
             if (txHash) {
                 setReleaseTxHash(txHash as string);
                 setReleaseSuccess(true);
@@ -627,52 +629,19 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                         gap: "0.75rem",
                                                     }}
                                                 >
-                                                    <p
-                                                        style={{
-                                                            fontSize: "0.8rem",
-                                                            color: "var(--status-open)",
-                                                            fontWeight: 600,
-                                                            textAlign: "center",
-                                                        }}
-                                                    >
-                                                        ✓ Payment initiated — ICM in transit
+                                                    <p style={{ fontSize: "0.75rem", color: "var(--status-open)", fontWeight: 700, textAlign: "center", fontFamily: "var(--font-heading)", letterSpacing: "0.05em" }}>
+                                                        ✓ Step 1 complete — App-Chain approved
                                                     </p>
-                                                    {releaseTxHash && (
-                                                        <div style={{ textAlign: "center" }}>
-                                                            <p style={{ fontSize: "0.6rem", fontFamily: "var(--font-heading)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "0.3rem" }}>
-                                                                Transaction Hash
-                                                            </p>
-                                                            <code
-                                                                style={{
-                                                                    fontSize: "0.65rem",
-                                                                    fontFamily: "monospace",
-                                                                    background: "rgba(74,222,128,0.05)",
-                                                                    border: "1px solid rgba(74,222,128,0.15)",
-                                                                    padding: "4px 8px",
-                                                                    color: "var(--status-open)",
-                                                                    wordBreak: "break-all",
-                                                                    display: "block",
-                                                                    userSelect: "all",
-                                                                }}
-                                                            >
-                                                                {releaseTxHash}
-                                                            </code>
-                                                        </div>
-                                                    )}
+                                                    <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", textAlign: "center", lineHeight: 1.5 }}>
+                                                        Step 2: Confirm payment on C-Chain to release funds to the developer.
+                                                    </p>
                                                     <button
                                                         onClick={handleForceSettle}
                                                         disabled={isForceSettling}
-                                                        style={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            fontSize: "0.7rem",
-                                                            color: "var(--text-muted)",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                            textAlign: "center",
-                                                        }}
+                                                        className="btn-avax"
+                                                        style={{ width: "100%", justifyContent: "center", background: "rgba(74,222,128,0.12)", borderColor: "rgba(74,222,128,0.3)", color: "var(--status-open)" }}
                                                     >
-                                                        {isForceSettling ? "Settling..." : "Message stuck? Force settle"}
+                                                        {isForceSettling ? "Releasing..." : "Confirm & Release Funds →"}
                                                     </button>
                                                 </div>
                                             ) : (
