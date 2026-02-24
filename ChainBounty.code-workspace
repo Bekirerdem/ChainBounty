@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"solidity.packageDefaultDependenciesDirectory": "node_modules",
+		"solidity.packageDefaultDependenciesContractsDirectory": "",
+		"solidity.remappings": [
+			"@openzeppelin/=node_modules/@openzeppelin/",
+			"forge-std/=packages/contracts/lib/forge-std/src/",
+			"icm-contracts/=packages/contracts/lib/icm-contracts/",
+			"@forge-std/=packages/contracts/lib/icm-contracts/lib/forge-std/src/",
+			"@mocks/=packages/contracts/lib/icm-contracts/contracts/mocks/",
+			"@subnet-evm/=packages/contracts/lib/icm-contracts/contracts/subnet-evm/",
+			"@teleporter/=packages/contracts/lib/icm-contracts/contracts/teleporter/",
+			"@utilities/=packages/contracts/lib/icm-contracts/contracts/utilities/"
+		],
+		"solidity.remappingsWindows": [
+			"@openzeppelin/=node_modules/@openzeppelin/",
+			"forge-std/=packages/contracts/lib/forge-std/src/",
+			"icm-contracts/=packages/contracts/lib/icm-contracts/",
+			"@forge-std/=packages/contracts/lib/icm-contracts/lib/forge-std/src/",
+			"@mocks/=packages/contracts/lib/icm-contracts/contracts/mocks/",
+			"@subnet-evm/=packages/contracts/lib/icm-contracts/contracts/subnet-evm/",
+			"@teleporter/=packages/contracts/lib/icm-contracts/contracts/teleporter/",
+			"@utilities/=packages/contracts/lib/icm-contracts/contracts/utilities/"
+		],
+		"solidity.compileUsingRemoteVersion": "v0.8.20",
+		"solidity.defaultCompiler": "remote"
+	}
+}

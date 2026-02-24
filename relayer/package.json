@@ -1,0 +1,14 @@
+{
+  "name": "chainbounty-relayer",
+  "version": "1.0.0",
+  "description": "ChainBounty demo relayer — listens App-Chain events, settles on C-Chain",
+  "main": "relay.js",
+  "scripts": {
+    "start": "node relay.js",
+    "relay": "node relay.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2"
+  }
+}
