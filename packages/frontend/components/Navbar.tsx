@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useDemo } from "@/contexts/DemoContext";
 
@@ -15,7 +15,14 @@ const navLinks = [
 export default function Navbar() {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const { isDemoMode, toggleDemoMode } = useDemo();
+
+    // Hydration guard: ConnectButton reads wallet state from storage on the client.
+    // Showing it only after mount prevents the SSR mismatch. The initialState
+    // frozen in Providers (via useRef) ensures wagmi doesn't trigger a reconnect
+    // cycle on navigation, so no additional status check is needed here.
+    useEffect(() => { setMounted(true); }, []);
 
     return (
         <nav className="navbar">
@@ -49,7 +56,7 @@ export default function Navbar() {
                             color: "var(--text-primary)",
                         }}
                     >
-                        Chain<span style={{ color: "var(--avax-red)" }}>Bounty</span>
+                        Chain<span className="gradient-text">Bounty</span>
                     </span>
                 </Link>
 
@@ -112,7 +119,11 @@ export default function Navbar() {
                     </button>
 
                     {/* Wallet Connect — RainbowKit */}
-                    <ConnectButton />
+                    {mounted ? (
+                        <ConnectButton />
+                    ) : (
+                        <div style={{ width: "150px", height: "40px" }} />
+                    )}
 
                     {/* Mobile Menu Toggle */}
                     <button

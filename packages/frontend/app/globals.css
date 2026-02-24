@@ -238,6 +238,22 @@ h4 {
 }
 
 /* ============================================================
+   Glass Card — Blurred dark panel (no hover transform)
+   ============================================================ */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-primary);
+  border-radius: 2px;
+  transition: border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* ============================================================
    Status Badges — Sharp Tags
    ============================================================ */
 .badge {
@@ -277,6 +293,11 @@ h4 {
   background: rgba(107, 114, 128, 0.1);
   color: var(--status-cancelled);
   border: 1px solid rgba(107, 114, 128, 0.2);
+}
+.badge-expired {
+  background: rgba(107, 114, 128, 0.07);
+  color: var(--status-cancelled);
+  border: 1px solid rgba(107, 114, 128, 0.15);
 }
 
 /* ============================================================

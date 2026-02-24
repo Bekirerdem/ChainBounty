@@ -26,7 +26,7 @@ export default function Footer() {
                                 color: "var(--text-secondary)",
                             }}
                         >
-                            Chain<span style={{ color: "var(--avax-red)" }}>Bounty</span>
+                            Chain<span className="gradient-text">Bounty</span>
                         </span>
                     </div>
 
