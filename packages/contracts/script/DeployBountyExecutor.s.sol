@@ -16,9 +16,11 @@ contract DeployBountyExecutor is Script {
         );
 
         vm.startBroadcast(deployerKey);
-
-        BountyExecutor bountyExecutor = new BountyExecutor();
-
+        BountyExecutor bountyExecutor = new BountyExecutor(
+            teleporterMessenger,
+            cChainBlockchainID,
+            bountyManagerAddress
+        );
         vm.stopBroadcast();
 
         console.log("BountyExecutor deployed at:", address(bountyExecutor));

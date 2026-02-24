@@ -20,7 +20,11 @@ contract BountyExecutorTest is Test {
     address public mockManager = makeAddr("manager");
 
     function setUp() public {
-        bountyExecutor = new BountyExecutor();
+        bountyExecutor = new BountyExecutor(
+            mockTeleporter,
+            cChainID,
+            mockManager
+        );
     }
 
     function test_InitialState() public view {
