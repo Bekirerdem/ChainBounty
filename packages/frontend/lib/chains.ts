@@ -25,14 +25,14 @@ export const avalancheFuji = defineChain({
 // ChainBounty App-Chain — Custom Avalanche L1
 // ============================================================
 export const bountyAppChain = defineChain({
-    id: Number(process.env.NEXT_PUBLIC_APP_CHAIN_CHAIN_ID) || 99999,
+    id: Number(process.env.NEXT_PUBLIC_APP_CHAIN_CHAIN_ID) || 779672,
     name: "ChainBounty App-Chain",
     nativeCurrency: { name: "BOUNTY", symbol: "BNTY", decimals: 18 },
     rpcUrls: {
         default: {
             http: [
                 process.env.NEXT_PUBLIC_APP_CHAIN_RPC_URL ||
-                "http://127.0.0.1:9650/ext/bc/bountychain/rpc",
+                "https://subnets.avax.network/dispatch/testnet/rpc",
             ],
         },
     },

@@ -1,6 +1,6 @@
 // Auto-generated file from extract-abis.js
-export const BOUNTY_MANAGER_ADDRESS = process.env.NEXT_PUBLIC_BOUNTY_MANAGER_ADDRESS as `0x${string}` || "0x209630270DD1cAc59b3eB2839527658d8FC822D8";
-export const BOUNTY_EXECUTOR_ADDRESS = process.env.NEXT_PUBLIC_BOUNTY_EXECUTOR_ADDRESS as `0x${string}` || "0x53c10844dD2A249eE488EeA66E7Df21365030ceB";
+export const BOUNTY_MANAGER_ADDRESS = (process.env.NEXT_PUBLIC_BOUNTY_MANAGER_ADDRESS || "0x6ca6ccedd87a8b55cf29fdd22b42d18e1077313a") as `0x${string}`;
+export const BOUNTY_EXECUTOR_ADDRESS = (process.env.NEXT_PUBLIC_BOUNTY_EXECUTOR_ADDRESS || "0x53c10844dD2A249eE488EeA66E7Df21365030ceB") as `0x${string}`;
 
 export const BOUNTY_MANAGER_ABI = [
   {
