@@ -58,7 +58,7 @@ export default function Hero() {
       </Scene>
 
       {/* Readability gradient — bottom fade to page bg */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/40 to-[#0a0a0a] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#0a0a0a]/40 to-[#0a0a0a] pointer-events-none z-0" />
 
       {/* ── CONTENT ── */}
       <div className="container mx-auto px-6 z-10 flex flex-col items-center text-center relative">
@@ -103,7 +103,7 @@ export default function Hero() {
             </span>
           </div>
           <div style={{ overflow: "hidden" }}>
-            <span ref={line2Ref} style={{ display: "block", color: "#E84142" }}>
+            <span ref={line2Ref} className="gradient-text" style={{ display: "block" }}>
               Bounty Platform
             </span>
           </div>
