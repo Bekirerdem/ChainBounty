@@ -286,30 +286,27 @@ export function useBountySubmissions(bountyId: number) {
 // --- Proposal Management Hooks ---
 
 export function useAcceptProposal() {
-  const { address } = useAccount();
+  const { address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
 
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
   const acceptProposal = async (proposalId: number) => {
     if (!address) throw new Error("Wallet not connected");
 
-    try {
-      console.log(`Accepting proposal ${proposalId}...`);
-
-      const txHash = await writeContractAsync({
-        address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
-        abi: BOUNTY_EXECUTOR_ABI,
-        functionName: "acceptProposal",
-        args: [BigInt(proposalId)],
-        chainId: bountyAppChain.id,
-      });
-
-      console.log("Accept proposal Tx submitted:", txHash);
-      return txHash;
-    } catch (err) {
-      console.error("Accept proposal failed:", err);
-      throw err;
+    if (chain?.id !== bountyAppChain.id && switchChainAsync) {
+      await switchChainAsync({ chainId: bountyAppChain.id });
     }
+
+    const txHash = await writeContractAsync({
+      address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
+      abi: BOUNTY_EXECUTOR_ABI,
+      functionName: "acceptProposal",
+      args: [BigInt(proposalId)],
+      chainId: bountyAppChain.id,
+    });
+
+    return txHash;
   };
 
   return {
@@ -321,16 +318,19 @@ export function useAcceptProposal() {
 }
 
 export function useApprovePayment() {
-  const { address } = useAccount();
-  
+  const { address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
   const approvePayment = async (bountyId: number) => {
     if (!address) throw new Error("Wallet not connected");
 
-    try {
-      console.log(`Approving payment (Triggering Teleporter) for bounty ${bountyId}...`);
+    if (chain?.id !== bountyAppChain.id && switchChainAsync) {
+      await switchChainAsync({ chainId: bountyAppChain.id });
+    }
 
+    try {
       const txHash = await writeContractAsync({
         address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
         abi: BOUNTY_EXECUTOR_ABI,
