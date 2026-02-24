@@ -138,6 +138,32 @@ export const mockBounties: Bounty[] = [
         createdAt: now - 2 * DAY,
         tags: ["Frontend", "ICM", "Dashboard"],
     },
+    {
+        bountyId: 7,
+        creator: "0xAaBbCcDdEeFf00112233445566778899AaBbCcDd",
+        title: "Cross-Chain Dashboard UI Integration",
+        description:
+            "Kullanıcıların çapraz zincir ödeme durumlarını takip edebileceği React tabanlı bir panel tasarımı. Proje iptal edildi — gereksinimler değişti.",
+        reward: "4.0",
+        deadline: now - 10 * DAY,
+        status: "Cancelled",
+        submissionCount: 0,
+        createdAt: now - 25 * DAY,
+        tags: ["Frontend", "React", "Dashboard"],
+    },
+    {
+        bountyId: 8,
+        creator: "0x9988776655443322110099887766554433221100",
+        title: "Avalanche C-Chain Escrow Smart Contract Audit",
+        description:
+            "Fuji Testnet üzerinde yayında olan Escrow kontratımız için kapsamlı bir güvenlik denetimi. Bütçe dahilinde çözüme ulaşılamadığı için iptal edildi.",
+        reward: "7.5",
+        deadline: now - 8 * DAY,
+        status: "Cancelled",
+        submissionCount: 1,
+        createdAt: now - 30 * DAY,
+        tags: ["Solidity", "Security", "Avalanche"],
+    },
 ];
 
 // ============================================================
