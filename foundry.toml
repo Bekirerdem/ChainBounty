@@ -1,0 +1,18 @@
+[profile.default]
+src = "packages/contracts/src"
+out = "packages/contracts/out"
+libs = ["packages/contracts/lib"]
+optimizer = true
+optimizer_runs = 200
+solc_version = "0.8.20"
+
+remappings = [
+    "@openzeppelin/contracts/=packages/contracts/lib/openzeppelin-contracts/",
+    "forge-std/=packages/contracts/lib/forge-std/src/",
+    "icm-contracts/=packages/contracts/lib/icm-contracts/",
+    "@forge-std/=packages/contracts/lib/icm-contracts/lib/forge-std/src/",
+    "@mocks/=packages/contracts/lib/icm-contracts/contracts/mocks/",
+    "@subnet-evm/=packages/contracts/lib/icm-contracts/contracts/subnet-evm/",
+    "@teleporter/=packages/contracts/lib/icm-contracts/contracts/teleporter/",
+    "@utilities/=packages/contracts/lib/icm-contracts/contracts/utilities/"
+]
