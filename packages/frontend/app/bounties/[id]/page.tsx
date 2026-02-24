@@ -127,7 +127,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
         if (!address) return;
         try {
             await acceptProposal(submissionId);
-            refetchSubmissions();
+            setTimeout(() => refetchSubmissions(), 4000);
         } catch (error) {
             console.error("Accept Error:", error);
         }
@@ -147,9 +147,10 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     };
 
     const handleForceSettle = async () => {
-        if (!developerAddress) return;
+        const dev = developerAddress || prompt("Developer wallet address:");
+        if (!dev) return;
         try {
-            const txHash = await forceSettle(bountyId, developerAddress);
+            const txHash = await forceSettle(bountyId, dev);
             if (txHash) {
                 setReleaseTxHash(txHash as string);
                 setReleaseSuccess(true);

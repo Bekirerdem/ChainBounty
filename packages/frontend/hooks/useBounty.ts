@@ -431,12 +431,17 @@ export function useCancelBounty() {
  * Forces the settlement directly on the C-Chain.
  */
 export function useForceSettle() {
-  const { address } = useAccount();
-  
+  const { address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
   const forceSettle = async (bountyId: number, developerAddress: string) => {
     if (!address) throw new Error("Wallet not connected");
+
+    if (chain?.id !== avalancheFuji.id && switchChainAsync) {
+      await switchChainAsync({ chainId: avalancheFuji.id });
+    }
 
     try {
       console.log(`Force settling bounty ${bountyId} for ${developerAddress}...`);
