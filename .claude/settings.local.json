@@ -11,7 +11,8 @@
       "WebFetch(domain:chainlist.org)",
       "Bash(curl:*)",
       "Bash(cd /c/Users/l3eki/OneDrive/Masaüstü/ChainBounty/packages/contracts && forge test -vvv 2>&1)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

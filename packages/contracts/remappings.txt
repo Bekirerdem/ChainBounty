@@ -1,3 +1,8 @@
-@openzeppelin/=../../node_modules/@openzeppelin/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/
 forge-std/=lib/forge-std/src/
 icm-contracts/=lib/icm-contracts/
+@forge-std/=lib/icm-contracts/lib/forge-std/src/
+@mocks/=lib/icm-contracts/contracts/mocks/
+@subnet-evm/=lib/icm-contracts/contracts/subnet-evm/
+@teleporter/=lib/icm-contracts/contracts/teleporter/
+@utilities/=lib/icm-contracts/contracts/utilities/
