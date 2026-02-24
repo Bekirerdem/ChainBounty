@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import { formatAddress, formatDeadline, useMockMode, BountyStatus } from "@/lib/mock-data";
-import { useSubmitWork, useTaskDetails, useBountySubmissions, useAcceptProposal, useApprovePayment, useForceSettle } from "@/hooks/useBounty";
+import { useSubmitWork, useTaskDetails, useBountySubmissions, useAcceptProposal, useApprovePayment, useForceSettle, useCancelBounty } from "@/hooks/useBounty";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -43,6 +43,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const { acceptProposal, isPending: isAccepting } = useAcceptProposal();
     const { approvePayment, isPending: isApproving } = useApprovePayment();
     const { forceSettle, isPending: isForceSettling } = useForceSettle();
+    const { cancelBounty, isPending: isCancelling } = useCancelBounty();
 
     // Parse the task details from the contract tuple
     let bounty = null;
@@ -123,7 +124,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const handleAccept = async (submissionId: number) => {
         if (!address) return;
         try {
-            await acceptProposal(submissionId, bountyId, address);
+            await acceptProposal(submissionId);
             refetchSubmissions();
         } catch (error) {
             console.error("Accept Error:", error);
@@ -133,7 +134,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const handleReleaseFunds = async () => {
         if (!address) return;
         try {
-            const txHash = await approvePayment(bountyId, address);
+            const txHash = await approvePayment(bountyId);
             if (txHash) {
                 setReleaseTxHash(txHash as string);
                 setReleaseSuccess(true);
@@ -153,6 +154,18 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
             }
         } catch (error) {
             console.error("Force Settle Error:", error);
+        }
+    };
+
+    const handleCancelBounty = async () => {
+        if (!address) return;
+        if (!confirm("Cancel this bounty and get your AVAX refunded?")) return;
+        try {
+            await cancelBounty(bountyId);
+            // Refetch bounty to reflect new Cancelled status
+            window.location.reload();
+        } catch (error) {
+            console.error("Cancel Error:", error);
         }
     };
 
@@ -682,18 +695,42 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                 </div>
                                             )
                                         ) : (
-                                            <div
-                                                style={{
-                                                    padding: "0.85rem",
-                                                    border: "1px solid var(--border-primary)",
-                                                    textAlign: "center",
-                                                    fontSize: "0.75rem",
-                                                    color: "var(--text-muted)",
-                                                    fontFamily: "var(--font-heading)",
-                                                    letterSpacing: "0.05em",
-                                                }}
-                                            >
-                                                Review submissions below to accept one
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                                                <div
+                                                    style={{
+                                                        padding: "0.85rem",
+                                                        border: "1px solid var(--border-primary)",
+                                                        textAlign: "center",
+                                                        fontSize: "0.75rem",
+                                                        color: "var(--text-muted)",
+                                                        fontFamily: "var(--font-heading)",
+                                                        letterSpacing: "0.05em",
+                                                    }}
+                                                >
+                                                    Review submissions below to accept one
+                                                </div>
+                                                <button
+                                                    onClick={handleCancelBounty}
+                                                    disabled={isCancelling}
+                                                    style={{
+                                                        background: "none",
+                                                        border: "1px solid rgba(232,65,66,0.2)",
+                                                        padding: "0.6rem",
+                                                        fontSize: "0.7rem",
+                                                        fontFamily: "var(--font-heading)",
+                                                        fontWeight: 700,
+                                                        letterSpacing: "0.08em",
+                                                        textTransform: "uppercase",
+                                                        color: "var(--avax-red)",
+                                                        cursor: "pointer",
+                                                        transition: "border-color 0.2s, background 0.2s",
+                                                        width: "100%",
+                                                    }}
+                                                    onMouseEnter={e => (e.currentTarget.style.background = "rgba(232,65,66,0.05)")}
+                                                    onMouseLeave={e => (e.currentTarget.style.background = "none")}
+                                                >
+                                                    {isCancelling ? "Cancelling..." : "Cancel Bounty & Refund AVAX"}
+                                                </button>
                                             </div>
                                         )
                                     ) : (

@@ -266,23 +266,23 @@ export function useBountySubmissions(bountyId: number) {
 
 export function useAcceptProposal() {
   const { address } = useAccount();
-  
+
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
-  const acceptProposal = async (proposalId: number, bountyId: number, mockEmployerAddress: string) => {
+  const acceptProposal = async (proposalId: number) => {
     if (!address) throw new Error("Wallet not connected");
 
     try {
-      console.log(`Accepting proposal ${proposalId} for bounty ${bountyId} as ${mockEmployerAddress}...`);
-      
+      console.log(`Accepting proposal ${proposalId}...`);
+
       const txHash = await writeContractAsync({
         address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
         abi: BOUNTY_EXECUTOR_ABI,
         functionName: "acceptProposal",
-        args: [BigInt(proposalId), mockEmployerAddress as `0x${string}`],
+        args: [BigInt(proposalId)],
         chainId: bountyAppChain.id,
       });
-      
+
       console.log("Accept proposal Tx submitted:", txHash);
       return txHash;
     } catch (err) {
@@ -304,17 +304,17 @@ export function useApprovePayment() {
   
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
-  const approvePayment = async (bountyId: number, mockEmployerAddress: string) => {
+  const approvePayment = async (bountyId: number) => {
     if (!address) throw new Error("Wallet not connected");
 
     try {
-      console.log(`Approving payment (Triggering Teleporter) for bounty ${bountyId} as ${mockEmployerAddress}...`);
-      
+      console.log(`Approving payment (Triggering Teleporter) for bounty ${bountyId}...`);
+
       const txHash = await writeContractAsync({
         address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
         abi: BOUNTY_EXECUTOR_ABI,
         functionName: "approveWorkAndTriggerPayment",
-        args: [BigInt(bountyId), mockEmployerAddress as `0x${string}`],
+        args: [BigInt(bountyId)],
         chainId: bountyAppChain.id,
       });
       
@@ -328,6 +328,45 @@ export function useApprovePayment() {
 
   return {
     approvePayment,
+    isPending,
+    isSuccess,
+    error,
+  };
+}
+
+/**
+ * Cancels a bounty on the C-Chain, refunding locked AVAX to the employer.
+ * Only callable by the bounty's employer when no proposal has been accepted yet.
+ */
+export function useCancelBounty() {
+  const { address } = useAccount();
+
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const cancelBounty = async (bountyId: number) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    try {
+      console.log(`Cancelling bounty ${bountyId}...`);
+
+      const txHash = await writeContractAsync({
+        address: BOUNTY_MANAGER_ADDRESS as `0x${string}`,
+        abi: BOUNTY_MANAGER_ABI,
+        functionName: "cancelBounty",
+        args: [BigInt(bountyId)],
+        chainId: avalancheFuji.id,
+      });
+
+      console.log("Cancel bounty Tx submitted:", txHash);
+      return txHash;
+    } catch (err) {
+      console.error("Cancel bounty failed:", err);
+      throw err;
+    }
+  };
+
+  return {
+    cancelBounty,
     isPending,
     isSuccess,
     error,
