@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useDemo } from "@/contexts/DemoContext";
+import { useAccount } from "wagmi";
 
 const navLinks = [
     { href: "/", label: "Home" },
@@ -17,6 +18,12 @@ export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const { isDemoMode, toggleDemoMode } = useDemo();
+    const { isConnected } = useAccount();
+
+    const allLinks = [
+        ...navLinks,
+        ...(isConnected ? [{ href: "/dashboard/employer", label: "Dashboard" }] : []),
+    ];
 
     // Hydration guard: ConnectButton reads wallet state from storage on the client.
     // Showing it only after mount prevents the SSR mismatch. The initialState
@@ -68,7 +75,7 @@ export default function Navbar() {
                         gap: "2rem",
                     }}
                 >
-                    {navLinks.map((link) => (
+                    {allLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
@@ -80,7 +87,7 @@ export default function Navbar() {
                                 textTransform: "uppercase" as const,
                                 letterSpacing: "0.08em",
                                 color:
-                                    pathname === link.href
+                                    pathname === link.href || (link.href.startsWith("/dashboard") && pathname?.startsWith("/dashboard"))
                                         ? "var(--text-primary)"
                                         : "var(--text-muted)",
                                 transition: "color 0.2s ease",
@@ -88,7 +95,7 @@ export default function Navbar() {
                             }}
                         >
                             {link.label}
-                            {pathname === link.href && (
+                            {(pathname === link.href || (link.href.startsWith("/dashboard") && pathname?.startsWith("/dashboard"))) && (
                                 <span
                                     style={{
                                         position: "absolute",
@@ -154,7 +161,7 @@ export default function Navbar() {
                         gap: "1rem",
                     }}
                 >
-                    {navLinks.map((link) => (
+                    {allLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
@@ -167,7 +174,7 @@ export default function Navbar() {
                                 textTransform: "uppercase" as const,
                                 letterSpacing: "0.06em",
                                 color:
-                                    pathname === link.href
+                                    pathname === link.href || (link.href.startsWith("/dashboard") && pathname?.startsWith("/dashboard"))
                                         ? "var(--text-primary)"
                                         : "var(--text-muted)",
                             }}
