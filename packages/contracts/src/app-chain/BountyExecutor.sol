@@ -74,6 +74,12 @@ contract BountyExecutor is ReentrancyGuard, ITeleporterReceiver {
         address indexed employer
     );
     event PaymentTriggered(uint256 indexed bountyId, address indexed developer);
+    event FraudulentClaimOverridden(
+        uint256 indexed bountyId,
+        address indexed fraudster,
+        address indexed realEmployer
+    );
+    event BountyCancelled(uint256 indexed bountyId);
 
     // ============================================================
     //                         ERRORS
@@ -138,29 +144,37 @@ contract BountyExecutor is ReentrancyGuard, ITeleporterReceiver {
             );
 
         if (msgType == IBountyTypes.MessageType.CREATE_BOUNTY) {
-            // Employer'ı kaydet — artık bu bilgi kriptografik olarak doğrulanmış
+            // GÜVENLIK FIX: Teleporter mesajı HER ZAMAN kazanır.
+            // claimEmployer() ile sahte kayıt yapılmışsa bile overwrite eder.
+            address previousClaim = bountyEmployers[bountyId];
             bountyEmployers[bountyId] = employer;
             emit BountyRegistered(bountyId, employer);
+
+            // Sahte claim tespit edildiyse log at
+            if (previousClaim != address(0) && previousClaim != employer) {
+                emit FraudulentClaimOverridden(
+                    bountyId,
+                    previousClaim,
+                    employer
+                );
+            }
         }
-        // Diğer mesaj tipleri gelecekteki özellikler için (CANCEL_BOUNTY vb.)
+        // Fix 4: CANCEL_BOUNTY handler — stale data engellenir
+        else if (msgType == IBountyTypes.MessageType.CANCEL_BOUNTY) {
+            // Bounty iptal edildi — employer kaydını sil
+            // Bu, yeni teklif verilmesini engeller (submitProposal BountyNotRegistered revert eder)
+            delete bountyEmployers[bountyId];
+            emit BountyCancelled(bountyId);
+        }
     }
 
     // ============================================================
     //                     EXTERNAL FUNCTIONS
     // ============================================================
 
-    /**
-     * @dev Relayer ICM mesajını iletmeden önce işveren kendini manuel olarak kaydeder.
-     * ICM mesajı daha sonra gelirse üzerine yazar (güvenli: Teleporter her zaman kazanır).
-     * İlk çağıran employer olur — sadece bir kez kaydedilebilir.
-     *
-     * @param _bountyId Kaydedilecek bounty ID
-     */
-    function claimEmployer(uint256 _bountyId) external {
-        if (bountyEmployers[_bountyId] != address(0)) revert Unauthorized();
-        bountyEmployers[_bountyId] = msg.sender;
-        emit BountyRegistered(_bountyId, msg.sender);
-    }
+    // claimEmployer() KALDIRILDI — Güvenlik Fix #1
+    // Race condition: Saldırgan ICM mesajından önce kendini employer olarak kaydedebiliyordu.
+    // Artık employer kaydı SADECE Teleporter üzerinden yapılır.
 
     /**
      * @dev Geliştirici, C-Chain'de açılmış bir ilana başvurur.
@@ -278,6 +292,73 @@ contract BountyExecutor is ReentrancyGuard, ITeleporterReceiver {
         });
 
         emit PaymentTriggered(_bountyId, prop.developer);
+
+        ITeleporterMessenger(teleporterMessenger).sendCrossChainMessage(
+            messageInput
+        );
+    }
+
+    // ============================================================
+    //                    AUTO-RELEASE (ANTI-GHOSTING)
+    // ============================================================
+
+    /// @notice Developer'ın iş teslim zamanı
+    mapping(uint256 => uint256) public workDeliveredAt;
+
+    /// @notice Auto-release süresi
+    uint256 public constant AUTO_RELEASE_TIMEOUT = 72 hours;
+
+    event WorkDelivered(uint256 indexed bountyId, address indexed developer);
+    event AutoReleaseTriggered(
+        uint256 indexed bountyId,
+        address indexed developer
+    );
+
+    /// @dev Developer, kabul edilmiş teklifi olan bir bounty için işi teslim eder.
+    function deliverWork(uint256 _bountyId) external nonReentrant {
+        uint256 acceptedProposalId = acceptedProposals[_bountyId];
+        if (acceptedProposalId == 0) revert ProposalNotFound();
+
+        Proposal storage prop = proposals[acceptedProposalId];
+        if (prop.developer != msg.sender) revert Unauthorized();
+        if (workDeliveredAt[_bountyId] != 0) revert AlreadySubmitted(); // Zaten teslim edilmiş
+
+        workDeliveredAt[_bountyId] = block.timestamp;
+        emit WorkDelivered(_bountyId, msg.sender);
+    }
+
+    /// @dev 72 saat sonra developer veya herhangi biri ödemeyi tetikleyebilir.
+    function autoReleasePayment(uint256 _bountyId) external nonReentrant {
+        if (workDeliveredAt[_bountyId] == 0) revert ProposalNotFound();
+        if (
+            block.timestamp < workDeliveredAt[_bountyId] + AUTO_RELEASE_TIMEOUT
+        ) {
+            revert Unauthorized(); // Henüz timeout olmadı
+        }
+
+        uint256 acceptedProposalId = acceptedProposals[_bountyId];
+        Proposal storage prop = proposals[acceptedProposalId];
+
+        emit AutoReleaseTriggered(_bountyId, prop.developer);
+
+        // ICM ile C-Chain'e ödeme tetikle (approveWorkAndTriggerPayment ile aynı mantık)
+        bytes memory messageData = abi.encode(
+            IBountyTypes.MessageType.APPROVE_SOLUTION,
+            _bountyId,
+            prop.developer
+        );
+
+        TeleporterMessageInput memory messageInput = TeleporterMessageInput({
+            destinationBlockchainID: cChainId,
+            destinationAddress: bountyManagerAddress,
+            feeInfo: TeleporterFeeInfo({
+                feeTokenAddress: address(0),
+                amount: 0
+            }),
+            requiredGasLimit: 300_000,
+            allowedRelayerAddresses: new address[](0),
+            message: messageData
+        });
 
         ITeleporterMessenger(teleporterMessenger).sendCrossChainMessage(
             messageInput

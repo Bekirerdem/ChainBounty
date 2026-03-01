@@ -192,18 +192,62 @@ contract BountyManager is ReentrancyGuard, ITeleporterReceiver {
 
         emit BountyCancelled(_bountyId, msg.sender);
 
+        // App-Chain'e iptal bildir (Fix 4: Stale data engelle)
+        if (allowedAppChainExecutor != address(0)) {
+            bytes memory cancelMessage = abi.encode(
+                IBountyTypes.MessageType.CANCEL_BOUNTY,
+                _bountyId,
+                msg.sender
+            );
+
+            TeleporterMessageInput memory cancelInput = TeleporterMessageInput({
+                destinationBlockchainID: appChainId,
+                destinationAddress: allowedAppChainExecutor,
+                feeInfo: TeleporterFeeInfo({
+                    feeTokenAddress: address(0),
+                    amount: 0
+                }),
+                requiredGasLimit: 100_000,
+                allowedRelayerAddresses: new address[](0),
+                message: cancelMessage
+            });
+
+            ITeleporterMessenger(teleporterMessenger).sendCrossChainMessage(
+                cancelInput
+            );
+        }
+
         (bool success, ) = msg.sender.call{value: refundAmount}("");
         if (!success) revert PaymentFailed();
     }
 
-    /**
-     * @dev İşveren, cross-chain mesajının ulaşmadığı durumlarda ödemeyi manuel olarak tetikleyebilir.
-     * Bu fonksiyon sadece Hackathon demosu ve Teleporter ağı sorunları durumunda kullanılmak üzere (fallback) eklenmiştir.
-     *
-     * @param _bountyId Ödemesi yapılacak bounty
-     * @param _developer Ödemenin yapılacağı geliştirici adresi
-     */
-    function forceSettleByEmployer(
+    // ============================================================
+    //                    FORCE SETTLE (FALLBACK)
+    // ============================================================
+
+    /// @notice Employer'ın force settle talebini kaydettiği mapping
+    /// bountyId => (developer, requestTimestamp)
+    struct SettleIntent {
+        address developer;
+        uint256 requestedAt;
+    }
+    mapping(uint256 => SettleIntent) public settleIntents;
+
+    /// @notice Timelock süresi — intent'ten execution'a kadar beklenecek süre
+    uint256 public constant SETTLE_TIMELOCK = 24 hours;
+
+    event ForceSettleRequested(
+        uint256 indexed bountyId,
+        address indexed employer,
+        address indexed developer
+    );
+    event ForceSettleExecuted(
+        uint256 indexed bountyId,
+        address indexed developer
+    );
+
+    /// @dev Adım 1: Employer settle intent kaydeder. 24 saat sonra execute edebilir.
+    function requestForceSettle(
         uint256 _bountyId,
         address _developer
     ) external nonReentrant {
@@ -211,16 +255,40 @@ contract BountyManager is ReentrancyGuard, ITeleporterReceiver {
         if (b.employer == address(0)) revert BountyNotFound();
         if (b.employer != msg.sender) revert Unauthorized();
         if (!b.isActive || b.isCompleted) revert BountyNotActive();
+        if (_developer == address(0)) revert PaymentFailed();
 
-        // CEI: State güncelle, sonra para gönder
+        settleIntents[_bountyId] = SettleIntent({
+            developer: _developer,
+            requestedAt: block.timestamp
+        });
+
+        emit ForceSettleRequested(_bountyId, msg.sender, _developer);
+    }
+
+    /// @dev Adım 2: Timelock sonrası execute et.
+    function executeForceSettle(uint256 _bountyId) external nonReentrant {
+        Bounty storage b = bounties[_bountyId];
+        if (b.employer == address(0)) revert BountyNotFound();
+        if (b.employer != msg.sender) revert Unauthorized();
+        if (!b.isActive || b.isCompleted) revert BountyNotActive();
+
+        SettleIntent memory intent = settleIntents[_bountyId];
+        if (intent.developer == address(0)) revert BountyNotFound();
+        if (block.timestamp < intent.requestedAt + SETTLE_TIMELOCK)
+            revert Unauthorized();
+
+        // CEI
         b.isCompleted = true;
         b.isActive = false;
         uint256 payment = b.budget;
         b.budget = 0;
 
-        emit BountyCompleted(_bountyId, _developer);
+        delete settleIntents[_bountyId];
 
-        (bool success, ) = _developer.call{value: payment}("");
+        emit ForceSettleExecuted(_bountyId, intent.developer);
+        emit BountyCompleted(_bountyId, intent.developer);
+
+        (bool success, ) = intent.developer.call{value: payment}("");
         if (!success) revert PaymentFailed();
     }
 
