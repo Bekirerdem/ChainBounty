@@ -51,7 +51,7 @@
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-elevated: var(--bg-elevated);
   --color-bg-glass: var(--bg-glass);
-  
+
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -465,6 +465,49 @@ h4 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dashboard stat cards */
+.stat-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  padding: 1rem 1.25rem;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.stat-card:hover {
+  border-color: var(--border-hover);
+}
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.stat-label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
 }
 
 .gradient-text {

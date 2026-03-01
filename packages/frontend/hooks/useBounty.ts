@@ -354,42 +354,12 @@ export function useApprovePayment() {
     error,
   };
 }
-
-/**
- * Employer registers themselves on App-Chain for a specific bounty.
- * Needed when ICM relayer hasn't delivered the CREATE_BOUNTY message yet.
- */
-export function useClaimEmployer() {
-  const { address } = useAccount();
-  const { switchChainAsync } = useSwitchChain();
-  const { chain } = useAccount();
-
-  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
-
-  const claimEmployer = async (bountyId: number) => {
-    if (!address) throw new Error("Wallet not connected");
-
-    if (chain?.id !== bountyAppChain.id) {
-      if (switchChainAsync) await switchChainAsync({ chainId: bountyAppChain.id });
-    }
-
-    const txHash = await writeContractAsync({
-      address: BOUNTY_EXECUTOR_ADDRESS as `0x${string}`,
-      abi: BOUNTY_EXECUTOR_ABI,
-      functionName: "claimEmployer",
-      args: [BigInt(bountyId)],
-      chainId: bountyAppChain.id,
-    });
-
-    return txHash;
-  };
-
-  return { claimEmployer, isPending, isSuccess, error };
-}
+// NOTE: useClaimEmployer REMOVED — claimEmployer() fonksiyonu güvenlik açığı nedeniyle kaldırıldı.
+// Employer kaydı artık yalnızca Teleporter ICM mesajı ile yapılır.
 
 /**
  * Cancels a bounty on the C-Chain, refunding locked AVAX to the employer.
- * Only callable by the bounty's employer when no proposal has been accepted yet.
+ * Now also sends CANCEL_BOUNTY ICM to App-Chain to clear stale data.
  */
 export function useCancelBounty() {
   const { address } = useAccount();
@@ -426,46 +396,168 @@ export function useCancelBounty() {
   };
 }
 
+// ============================================================
+//          FORCE SETTLE — 24h Timelock (Security Fix 2)
+// ============================================================
+
 /**
- * Fallback mechanism for Hackathon if Teleporter fails.
- * Forces the settlement directly on the C-Chain.
+ * Adım 1: Employer force settle intent kaydeder. 24 saat timelock başlar.
  */
-export function useForceSettle() {
+export function useRequestForceSettle() {
   const { address, chain } = useAccount();
   const { switchChainAsync } = useSwitchChain();
-
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
-  const forceSettle = async (bountyId: number, developerAddress: string) => {
+  const requestForceSettle = async (bountyId: number, developerAddress: string) => {
     if (!address) throw new Error("Wallet not connected");
 
     if (chain?.id !== avalancheFuji.id && switchChainAsync) {
       await switchChainAsync({ chainId: avalancheFuji.id });
     }
 
-    try {
-      console.log(`Force settling bounty ${bountyId} for ${developerAddress}...`);
-      
-      const txHash = await writeContractAsync({
-        address: BOUNTY_MANAGER_ADDRESS as `0x${string}`,
-        abi: BOUNTY_MANAGER_ABI,
-        functionName: "forceSettleByEmployer",
-        args: [BigInt(bountyId), developerAddress as `0x${string}`],
-        chainId: avalancheFuji.id, // Must be C-Chain
-      });
-      
-      console.log("Force settle Tx submitted:", txHash);
-      return txHash;
-    } catch (err) {
-      console.error("Force settle failed:", err);
-      throw err;
-    }
+    return await writeContractAsync({
+      address: BOUNTY_MANAGER_ADDRESS,
+      abi: BOUNTY_MANAGER_ABI,
+      functionName: "requestForceSettle",
+      args: [BigInt(bountyId), developerAddress as `0x${string}`],
+      chainId: avalancheFuji.id,
+    });
   };
 
+  return { requestForceSettle, isPending, isSuccess, error };
+}
+
+/**
+ * Adım 2: 24 saat sonra employer execute eder.
+ */
+export function useExecuteForceSettle() {
+  const { address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const executeForceSettle = async (bountyId: number) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    if (chain?.id !== avalancheFuji.id && switchChainAsync) {
+      await switchChainAsync({ chainId: avalancheFuji.id });
+    }
+
+    return await writeContractAsync({
+      address: BOUNTY_MANAGER_ADDRESS,
+      abi: BOUNTY_MANAGER_ABI,
+      functionName: "executeForceSettle",
+      args: [BigInt(bountyId)],
+      chainId: avalancheFuji.id,
+    });
+  };
+
+  return { executeForceSettle, isPending, isSuccess, error };
+}
+
+/**
+ * Read: Settle intent durumunu kontrol et (timelock countdown için)
+ */
+export function useSettleIntent(bountyId: number) {
+  const { data, isLoading, refetch } = useReadContract({
+    address: BOUNTY_MANAGER_ADDRESS,
+    abi: BOUNTY_MANAGER_ABI,
+    functionName: "settleIntents",
+    args: [BigInt(bountyId)],
+    chainId: avalancheFuji.id,
+    query: { enabled: bountyId > 0 },
+  });
+
+  const intent = data as unknown as [string, bigint] | undefined;
+
   return {
-    forceSettle,
-    isPending,
-    isSuccess,
-    error,
+    developer: intent?.[0] ?? "0x0000000000000000000000000000000000000000",
+    requestedAt: intent ? Number(intent[1]) : 0,
+    canExecuteAt: intent ? Number(intent[1]) + 86400 : 0, // +24h
+    isLoading,
+    refetch,
   };
 }
+
+// ============================================================
+//        ANTI-GHOSTING — 72h Auto-Release (Security Fix 3)
+// ============================================================
+
+/**
+ * Developer, kabul edilmiş bounty için işi teslim eder.
+ * 72 saat sonra auto-release tetiklenebilir.
+ */
+export function useDeliverWork() {
+  const { address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const deliverWork = async (bountyId: number) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    if (chain?.id !== bountyAppChain.id && switchChainAsync) {
+      await switchChainAsync({ chainId: bountyAppChain.id });
+    }
+
+    return await writeContractAsync({
+      address: BOUNTY_EXECUTOR_ADDRESS,
+      abi: BOUNTY_EXECUTOR_ABI,
+      functionName: "deliverWork",
+      args: [BigInt(bountyId)],
+      chainId: bountyAppChain.id,
+    });
+  };
+
+  return { deliverWork, isPending, isSuccess, error };
+}
+
+/**
+ * 72 saat sonra developer veya herhangi biri ödemeyi tetikler.
+ */
+export function useAutoReleasePayment() {
+  const { address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
+
+  const autoRelease = async (bountyId: number) => {
+    if (!address) throw new Error("Wallet not connected");
+
+    if (chain?.id !== bountyAppChain.id && switchChainAsync) {
+      await switchChainAsync({ chainId: bountyAppChain.id });
+    }
+
+    return await writeContractAsync({
+      address: BOUNTY_EXECUTOR_ADDRESS,
+      abi: BOUNTY_EXECUTOR_ABI,
+      functionName: "autoReleasePayment",
+      args: [BigInt(bountyId)],
+      chainId: bountyAppChain.id,
+    });
+  };
+
+  return { autoRelease, isPending, isSuccess, error };
+}
+
+/**
+ * Developer'ın iş teslim zamanını okur (auto-release countdown için)
+ */
+export function useWorkDeliveredAt(bountyId: number) {
+  const { data, isLoading, refetch } = useReadContract({
+    address: BOUNTY_EXECUTOR_ADDRESS,
+    abi: BOUNTY_EXECUTOR_ABI,
+    functionName: "workDeliveredAt",
+    args: [BigInt(bountyId)],
+    chainId: bountyAppChain.id,
+    query: { enabled: bountyId > 0 },
+  });
+
+  const deliveredAt = data ? Number(data) : 0;
+
+  return {
+    deliveredAt,
+    isDelivered: deliveredAt > 0,
+    autoReleaseAt: deliveredAt > 0 ? deliveredAt + 259200 : 0, // +72h (259200 saniye)
+    isLoading,
+    refetch,
+  };
+}
+

@@ -4,8 +4,11 @@ import { use, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
+import CrossChainStatus, { type CrossChainStatusType } from "@/components/CrossChainStatus";
+import TimelockCountdown from "@/components/TimelockCountdown";
+import AutoReleaseCountdown from "@/components/AutoReleaseCountdown";
 import { formatAddress, formatDeadline, useMockMode, BountyStatus } from "@/lib/mock-data";
-import { useSubmitWork, useTaskDetails, useBountySubmissions, useAcceptProposal, useApprovePayment, useForceSettle, useCancelBounty, useClaimEmployer, useBountyEmployer } from "@/hooks/useBounty";
+import { useSubmitWork, useTaskDetails, useBountySubmissions, useAcceptProposal, useApprovePayment, useRequestForceSettle, useExecuteForceSettle, useCancelBounty, useBountyEmployer, useDeliverWork, useWorkDeliveredAt } from "@/hooks/useBounty";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -37,15 +40,19 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const [repoLink, setRepoLink] = useState("");
     const [demoLink, setDemoLink] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [releaseTxHash, setReleaseTxHash] = useState<string | null>(null);
     const [releaseSuccess, setReleaseSuccess] = useState(false);
+    const [crossChainStatus, setCrossChainStatus] = useState<CrossChainStatusType>("idle");
 
     const { acceptProposal, isPending: isAccepting } = useAcceptProposal();
     const { approvePayment, isPending: isApproving } = useApprovePayment();
-    const { forceSettle, isPending: isForceSettling } = useForceSettle();
+    const { requestForceSettle, isPending: isRequestingSettle } = useRequestForceSettle();
+    const { executeForceSettle, isPending: isExecutingSettle } = useExecuteForceSettle();
     const { cancelBounty, isPending: isCancelling } = useCancelBounty();
-    const { claimEmployer, isPending: isClaiming } = useClaimEmployer();
-    const { employerOnAppChain, refetch: refetchEmployer } = useBountyEmployer(bountyId);
+    const { employerOnAppChain } = useBountyEmployer(bountyId);
+    const { deliverWork, isPending: isDelivering } = useDeliverWork();
+    const { isDelivered } = useWorkDeliveredAt(bountyId);
 
     // Parse the task details from the contract tuple
     let bounty = null;
@@ -136,39 +143,53 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     const handleReleaseFunds = async () => {
         if (!address) return;
         try {
+            setCrossChainStatus("tx-pending");
             const txHash = await approvePayment(bountyId);
             if (txHash) {
                 setReleaseTxHash(txHash as string);
+                setCrossChainStatus("tx-confirming");
                 setReleaseSuccess(true);
+                setCrossChainStatus("icm-relaying");
+                // ICM delivery would be polled in production
+                setTimeout(() => setCrossChainStatus("icm-delivered"), 8000);
             }
         } catch (error) {
             console.error("Release Funds Error:", error);
+            setCrossChainStatus("failed");
         }
     };
 
-    const handleForceSettle = async () => {
+    const handleDeliverWork = async () => {
+        if (!address) return;
+        try {
+            await deliverWork(bountyId);
+        } catch (error) {
+            console.error("Deliver work error:", error);
+        }
+    };
+
+    const handleRequestForceSettle = async () => {
         if (!developerAddress) {
             alert("No accepted proposal found. Please refresh and try again.");
             return;
         }
         try {
-            const txHash = await forceSettle(bountyId, developerAddress);
+            await requestForceSettle(bountyId, developerAddress);
+            alert("Force settle requested! You can execute in 24 hours.");
+        } catch (error) {
+            console.error("Request Force Settle Error:", error);
+        }
+    };
+
+    const handleExecuteForceSettle = async () => {
+        try {
+            const txHash = await executeForceSettle(bountyId);
             if (txHash) {
                 setReleaseTxHash(txHash as string);
                 setReleaseSuccess(true);
             }
         } catch (error) {
-            console.error("Force Settle Error:", error);
-        }
-    };
-
-    const handleClaimEmployer = async () => {
-        if (!address) return;
-        try {
-            await claimEmployer(bountyId);
-            refetchEmployer();
-        } catch (error) {
-            console.error("Claim employer error:", error);
+            console.error("Execute Force Settle Error:", error);
         }
     };
 
@@ -446,7 +467,7 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                     </p>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                            <div className="flex items-center gap-2 shrink-0">
                                                 {sub.repoLink && (
                                                     <a href={sub.repoLink} target="_blank" rel="noopener noreferrer" className="btn-ghost btn-sm">
                                                         GitHub →
@@ -612,6 +633,14 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                             </div>
                         </div>
 
+                        {/* Cross-Chain Status */}
+                        <div style={{ padding: "0 1.75rem" }}>
+                            <CrossChainStatus
+                                status={crossChainStatus}
+                                onDismiss={() => setCrossChainStatus("idle")}
+                            />
+                        </div>
+
                         {/* Action area */}
                         <div style={{ padding: "1.5rem 1.75rem" }}>
                             {bounty.status === "Open" && (
@@ -636,12 +665,12 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                         Step 2: Confirm payment on C-Chain to release funds to the developer.
                                                     </p>
                                                     <button
-                                                        onClick={handleForceSettle}
-                                                        disabled={isForceSettling}
+                                                        onClick={handleExecuteForceSettle}
+                                                        disabled={isExecutingSettle}
                                                         className="btn-avax"
                                                         style={{ width: "100%", justifyContent: "center", background: "rgba(74,222,128,0.12)", borderColor: "rgba(74,222,128,0.3)", color: "var(--status-open)" }}
                                                     >
-                                                        {isForceSettling ? "Releasing..." : "Confirm & Release Funds →"}
+                                                        {isExecutingSettle ? "Releasing..." : "Confirm & Release Funds →"}
                                                     </button>
                                                 </div>
                                             ) : (
@@ -661,8 +690,8 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                         {isApproving ? "Releasing..." : "Release Funds →"}
                                                     </button>
                                                     <button
-                                                        onClick={handleForceSettle}
-                                                        disabled={isForceSettling}
+                                                        onClick={handleRequestForceSettle}
+                                                        disabled={isRequestingSettle}
                                                         style={{
                                                             background: "none",
                                                             border: "none",
@@ -673,21 +702,29 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                                             textAlign: "center",
                                                         }}
                                                     >
-                                                        {isForceSettling ? "Settling..." : "Force settlement (fallback)"}
+                                                        {isRequestingSettle ? "Requesting..." : "Request force settlement (24h timelock)"}
                                                     </button>
+                                                    <TimelockCountdown bountyId={bountyId} />
                                                 </div>
                                             )
                                         ) : (
                                             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                                                 {employerOnAppChain === "0x0000000000000000000000000000000000000000" ? (
-                                                    <button
-                                                        onClick={handleClaimEmployer}
-                                                        disabled={isClaiming}
-                                                        className="btn-avax"
-                                                        style={{ width: "100%", justifyContent: "center" }}
-                                                    >
-                                                        {isClaiming ? "Registering..." : "Register on App-Chain →"}
-                                                    </button>
+                                                <div
+                                                    style={{
+                                                        padding: "0.85rem",
+                                                        border: "1px solid rgba(255,165,0,0.2)",
+                                                        background: "rgba(255,165,0,0.03)",
+                                                        textAlign: "center",
+                                                        fontSize: "0.72rem",
+                                                        color: "var(--text-muted)",
+                                                        fontFamily: "var(--font-heading)",
+                                                        letterSpacing: "0.05em",
+                                                        lineHeight: 1.6,
+                                                    }}
+                                                >
+                                                    ⏳ Waiting for ICM relay — employer registration pending on App-Chain
+                                                </div>
                                                 ) : (
                                                 <div
                                                     style={{
@@ -729,18 +766,40 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
                                         )
                                     ) : (
                                         hasAcceptedProposal ? (
-                                            <div
-                                                style={{
-                                                    padding: "0.85rem",
-                                                    border: "1px solid var(--border-primary)",
-                                                    textAlign: "center",
-                                                    fontSize: "0.75rem",
-                                                    color: "var(--text-muted)",
-                                                    fontFamily: "var(--font-heading)",
-                                                    letterSpacing: "0.05em",
-                                                }}
-                                            >
-                                                A proposal has been accepted
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                                                {!isDelivered ? (
+                                                    <button
+                                                        onClick={handleDeliverWork}
+                                                        disabled={isDelivering}
+                                                        className="btn-avax"
+                                                        style={{
+                                                            width: "100%",
+                                                            justifyContent: "center",
+                                                            background: "rgba(74,222,128,0.12)",
+                                                            borderColor: "rgba(74,222,128,0.3)",
+                                                            color: "var(--status-open)",
+                                                        }}
+                                                    >
+                                                        {isDelivering ? "Gönderiliyor..." : "İşi Teslim Et →"}
+                                                    </button>
+                                                ) : (
+                                                    <div
+                                                        style={{
+                                                            padding: "0.6rem",
+                                                            border: "1px solid rgba(74,222,128,0.2)",
+                                                            background: "rgba(74,222,128,0.04)",
+                                                            textAlign: "center",
+                                                            fontSize: "0.7rem",
+                                                            fontFamily: "var(--font-heading)",
+                                                            fontWeight: 700,
+                                                            letterSpacing: "0.05em",
+                                                            color: "var(--status-open)",
+                                                        }}
+                                                    >
+                                                        ✓ İş teslim edildi
+                                                    </div>
+                                                )}
+                                                <AutoReleaseCountdown bountyId={bountyId} />
                                             </div>
                                         ) : (
                                             <button
